@@ -14,11 +14,8 @@ public class Player {
     private boolean isOnGround;
     private boolean isFinished = false;
 
-    // Player Size 24px, Wall Size 32px
     private final float WIDTH = 50f;
     private final float HEIGHT = 50f;
-
-    // Physics constants
     private final float GRAVITY = 2000f;
     private final float JUMP_FORCE = 800f;
     private final float SPEED = 300f;
@@ -30,45 +27,36 @@ public class Player {
     }
 
     public void update(float delta, Array<Wall> walls) {
-        // 1. Terapkan Gravitasi
         velocity.y -= GRAVITY * delta;
 
-        // 2. Update Posisi X (Horizontal)
         position.x += velocity.x * delta;
         updateCollider();
-        checkCollisions(walls, true); // Cek tabrakan samping
+        checkCollisions(walls, true);
 
-        // 3. Update Posisi Y (Vertikal)
         position.y += velocity.y * delta;
         updateCollider();
         isOnGround = false; // Reset ground
-        checkCollisions(walls, false); // Cek tabrakan atas/bawah
+        checkCollisions(walls, false);
 
-        // Reset velocity horizontal (agar movement stop kalau tombol dilepas)
-        // Kalau pakai InputHandler yang men-set velocity terus menerus, baris ini bisa dihapus/disesuaikan
         velocity.x = 0;
     }
 
     private void checkCollisions(Array<Wall> walls, boolean isXAxis) {
         for (Wall wall : walls) {
             if (collider.overlaps(wall.getBounds())) {
-                // Cek apakah ini Exit
                 if (wall.isExit()) {
                     isFinished = true;
                 }
 
-                // Logika Collision Fisik
                 if (isXAxis) {
-                    // Tabrakan Samping
                     if (velocity.x > 0) position.x = wall.getBounds().x - WIDTH;
                     else if (velocity.x < 0) position.x = wall.getBounds().x + wall.getBounds().width;
                 } else {
-                    // Tabrakan Atas/Bawah
-                    if (velocity.y < 0) { // Jatuh ke lantai
+                    if (velocity.y < 0) {
                         position.y = wall.getBounds().y + wall.getBounds().height;
                         isOnGround = true;
                         velocity.y = 0;
-                    } else if (velocity.y > 0) { // Mentok atap
+                    } else if (velocity.y > 0) {
                         position.y = wall.getBounds().y - HEIGHT;
                         velocity.y = 0;
                     }
@@ -82,7 +70,6 @@ public class Player {
         collider.setPosition(position.x, position.y);
     }
 
-    // Gerakan
     public void moveLeft(float delta) { velocity.x = -SPEED; }
     public void moveRight(float delta) { velocity.x = SPEED; }
     public void jump() { if(isOnGround) velocity.y = JUMP_FORCE; }
