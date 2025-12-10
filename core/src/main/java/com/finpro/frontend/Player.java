@@ -1,122 +1,96 @@
 package com.finpro.frontend;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
+import com.finpro.frontend.obstacles.Wall;
 
 public class Player {
-
     private Vector2 position;
     private Vector2 velocity;
-    private float gravity = 2000f;
-    private float force = 200000f;
-    private float maxVerticalSpeed = 700f;
     private Rectangle collider;
-    private float width = 64f;
-    private float height = 64f;
-    private boolean isOnGround = false;
+    private boolean isOnGround;
+    private boolean isFinished = false;
 
-    // Sistem kecepatan
-    private float Speed = 0f;
-    private float distanceTravelled = 0f;
+    // Player Size 24px, Wall Size 32px
+    private final float WIDTH = 50f;
+    private final float HEIGHT = 50f;
 
-    public Player(Vector2 startPosition) {
-        this.position = startPosition;
-        this.velocity = new Vector2(Speed, 0);
-        this.collider = new Rectangle(this.position.x, this.position.y,this.width, this.height);
+    // Physics constants
+    private final float GRAVITY = 2000f;
+    private final float JUMP_FORCE = 800f;
+    private final float SPEED = 300f;
+
+    public Player(Vector2 startPos) {
+        this.position = startPos;
+        this.velocity = new Vector2(0, 0);
+        this.collider = new Rectangle(startPos.x, startPos.y, WIDTH, HEIGHT);
     }
 
-    public void update(float delta) {
-        updateDistanceAndSpeed(delta);
-        updatePosition(delta);
-        applyGravity(delta);
+    public void update(float delta, Array<Wall> walls) {
+        // 1. Terapkan Gravitasi
+        velocity.y -= GRAVITY * delta;
+
+        // 2. Update Posisi X (Horizontal)
+        position.x += velocity.x * delta;
         updateCollider();
+        checkCollisions(walls, true); // Cek tabrakan samping
+
+        // 3. Update Posisi Y (Vertikal)
+        position.y += velocity.y * delta;
+        updateCollider();
+        isOnGround = false; // Reset ground
+        checkCollisions(walls, false); // Cek tabrakan atas/bawah
+
+        // Reset velocity horizontal (agar movement stop kalau tombol dilepas)
+        // Kalau pakai InputHandler yang men-set velocity terus menerus, baris ini bisa dihapus/disesuaikan
+        velocity.x = 0;
     }
 
-    private void updateDistanceAndSpeed(float delta) {
-        this.distanceTravelled += this.velocity.x * delta;
-    }
+    private void checkCollisions(Array<Wall> walls, boolean isXAxis) {
+        for (Wall wall : walls) {
+            if (collider.overlaps(wall.getBounds())) {
+                // Cek apakah ini Exit
+                if (wall.isExit()) {
+                    isFinished = true;
+                }
 
-    private void updatePosition(float delta) {
-        this.position.x += this.velocity.x * delta;
-        this.position.y += this.velocity.y * delta;
-    }
-
-    private void applyGravity(float delta) {
-        this.velocity.y -= this.gravity * delta;
-        this.velocity.x = this.Speed;
-
-        if (this.velocity.y > this.maxVerticalSpeed) {
-            this.velocity.y = this.maxVerticalSpeed;
+                // Logika Collision Fisik
+                if (isXAxis) {
+                    // Tabrakan Samping
+                    if (velocity.x > 0) position.x = wall.getBounds().x - WIDTH;
+                    else if (velocity.x < 0) position.x = wall.getBounds().x + wall.getBounds().width;
+                } else {
+                    // Tabrakan Atas/Bawah
+                    if (velocity.y < 0) { // Jatuh ke lantai
+                        position.y = wall.getBounds().y + wall.getBounds().height;
+                        isOnGround = true;
+                        velocity.y = 0;
+                    } else if (velocity.y > 0) { // Mentok atap
+                        position.y = wall.getBounds().y - HEIGHT;
+                        velocity.y = 0;
+                    }
+                }
+                updateCollider();
+            }
         }
-
-        if (this.velocity.y < -this.maxVerticalSpeed) {
-            this.velocity.y = -this.maxVerticalSpeed;
-        }
-    }
-
-    public void jump(float delta) {
-        if (this.isOnGround) {
-            this.velocity.y += this.force * delta;
-            this.isOnGround = false;
-        }
-    }
-
-    private void move(float delta, boolean movingLeft, boolean movingRight) {
-        float speed = 500f * delta;
-        if (movingLeft) this.position.x -= speed;
-        if (movingRight) this.position.x += speed;
-    }
-
-    public void moveLeft(float delta) {
-        this.position.x -= 500f * delta;
-    }
-
-    public void moveRight(float delta) {
-        this.position.x += 500f * delta;
     }
 
     private void updateCollider() {
-        this.collider.x = this.position.x;
-        this.collider.y = this.position.y;
+        collider.setPosition(position.x, position.y);
     }
 
-    public void checkBoundaries(Ground ground, float ceilingY) {
-        if (ground.isColliding(this.collider)) {
-            this.position.y = ground.getTopY();
-            this.isOnGround = true;
+    // Gerakan
+    public void moveLeft(float delta) { velocity.x = -SPEED; }
+    public void moveRight(float delta) { velocity.x = SPEED; }
+    public void jump() { if(isOnGround) velocity.y = JUMP_FORCE; }
 
-        }
-
-        if (this.collider.y + this.height >= ceilingY) {
-            this.position.y = ceilingY - this.height;
-        }
+    public void render(ShapeRenderer sr) {
+        sr.setColor(Color.RED);
+        sr.rect(position.x, position.y, WIDTH, HEIGHT);
     }
 
-    public void renderShape(ShapeRenderer shapeRenderer) {
-        shapeRenderer.setColor(Color.RED);
-        shapeRenderer.rect(this.position.x, this.position.y, this.width, this.height);
-    }
-
-    public Vector2 getPosition() {
-        return this.position;
-    }
-
-    public float getWidth() {
-        return this.width;
-    }
-
-    public float getHeight() {
-        return this.height;
-    }
-
-    public Rectangle getCollider() {
-        return this.collider;
-    }
-
-    public float getDistanceTraveled() {
-        return this.distanceTravelled / 10f;
-    }
+    public boolean isLevelFinished() { return isFinished; }
 }

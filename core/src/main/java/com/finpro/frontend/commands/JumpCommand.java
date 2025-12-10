@@ -7,7 +7,6 @@ public class JumpCommand implements Command {
 
     @Override
     public void execute(Player player, float delta) {
-        player.jump(delta);
+        player.jump();
     }
 }
-
