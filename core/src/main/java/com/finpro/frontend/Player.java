@@ -49,8 +49,10 @@ public class Player {
                 }
 
                 if (isXAxis) {
-                    if (velocity.x > 0) position.x = wall.getBounds().x - WIDTH;
-                    else if (velocity.x < 0) position.x = wall.getBounds().x + wall.getBounds().width;
+                    if (velocity.x > 0)
+                        position.x = wall.getBounds().x - WIDTH;
+                    else if (velocity.x < 0)
+                        position.x = wall.getBounds().x + wall.getBounds().width;
                 } else {
                     if (velocity.y < 0) {
                         position.y = wall.getBounds().y + wall.getBounds().height;
@@ -70,14 +72,34 @@ public class Player {
         collider.setPosition(position.x, position.y);
     }
 
-    public void moveLeft(float delta) { velocity.x = -SPEED; }
-    public void moveRight(float delta) { velocity.x = SPEED; }
-    public void jump() { if(isOnGround) velocity.y = JUMP_FORCE; }
+    public void moveLeft(float delta) {
+        velocity.x = -SPEED;
+    }
+
+    public void moveRight(float delta) {
+        velocity.x = SPEED;
+    }
+
+    public void jump() {
+        if (isOnGround)
+            velocity.y = JUMP_FORCE;
+    }
 
     public void render(ShapeRenderer sr) {
         sr.setColor(Color.RED);
         sr.rect(position.x, position.y, WIDTH, HEIGHT);
     }
 
-    public boolean isLevelFinished() { return isFinished; }
+    public boolean isLevelFinished() {
+        return isFinished;
+    }
+
+    public Rectangle getBounds() {
+        return collider;
+    }
+
+    public void setPosition(float x, float y) {
+        this.position.set(x, y);
+        updateCollider();
+    }
 }
