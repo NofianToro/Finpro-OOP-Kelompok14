@@ -1,5 +1,10 @@
 package com.finpro.frontend;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.utils.JsonReader;
+import com.badlogic.gdx.utils.JsonValue;
+import com.finpro.frontend.services.BackendService;
+
 public class GameManager {
 
     private static GameManager instance;
@@ -7,9 +12,12 @@ public class GameManager {
     private int score;
     private boolean gameActive;
 
+    private BackendService backendService;
+    private String currentPlayerId;
+
     private GameManager() {
-        this.score = 0;
-        this.gameActive = false;
+        gameActive = false;
+        backendService = new BackendService();
     }
 
     public static GameManager getInstance() {
@@ -41,5 +49,28 @@ public class GameManager {
 
     public void stopGame() {
         this.gameActive = false;
+    }
+
+//    ===
+//    Backend Service
+//    ===
+    public void registerPlayer(String username) {
+        backendService.createPlayer(username, new BackendService.RequestCallback() {
+            @Override
+            public void onSuccess(String response) {
+                try {
+                    JsonValue jsonValue = new JsonReader().parse(response);
+                    currentPlayerId = jsonValue.getString("playerId");
+                    Gdx.app.log("GameManager", "Player ID Saved: " + currentPlayerId);
+                } catch (Exception e) {
+                    Gdx.app.error("GameManager", "Failed to parse player ID", e);
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                Gdx.app.error("GameManager", "Register Error: " + error);
+            }
+        });
     }
 }

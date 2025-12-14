@@ -4,71 +4,43 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.finpro.frontend.factories.LevelFactory;
 import com.finpro.frontend.obstacles.Wall;
 import com.finpro.frontend.commands.InputHandler;
+import com.finpro.frontend.states.GameState;
+import com.finpro.frontend.states.GameStateManager;
+import com.finpro.frontend.states.MenuState;
 
 public class Main extends ApplicationAdapter {
-    private ShapeRenderer shapeRenderer;
-    private OrthographicCamera camera;
-
-    private Player player;
-    private Array<Wall> walls;
-    private LevelFactory levelFactory;
-    private InputHandler inputHandler;
-    private GameManager gameManager;
+    private GameStateManager gsm;
+    private SpriteBatch spriteBatch;
 
     @Override
     public void create() {
-        shapeRenderer = new ShapeRenderer();
-        gameManager = GameManager.getInstance();
-
-        camera = new OrthographicCamera(1280f, 720f);
-        camera.setToOrtho(false, 1280, 720);
-        camera.position.set(1280/2f, 720/2f, 0);
-        camera.update();
-
-        levelFactory = new LevelFactory();
-        walls = levelFactory.createLevel();
-
-        player = new Player(levelFactory.getStartPosition());
-
-        inputHandler = new InputHandler();
-
-        gameManager.startGame();
+        spriteBatch = new SpriteBatch();
+        gsm = new GameStateManager();
+        gsm.push(new MenuState(gsm));
     }
 
     @Override
     public void render() {
-        ScreenUtils.clear(Color.BLACK);
-        float delta = Gdx.graphics.getDeltaTime();
-
-        inputHandler.handleInput(player, delta);
-        player.update(delta, walls);
-
-        if (player.isLevelFinished()) {
-            System.out.println("Level Finished");
-        }
-
-        camera.update();
-        shapeRenderer.setProjectionMatrix(camera.combined);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-
-        // Generate Map
-        for (Wall wall : walls) {
-            wall.render(shapeRenderer);
-        }
-
-        player.render(shapeRenderer);
-
-        shapeRenderer.end();
+        ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f);
+        gsm.update(Gdx.graphics.getDeltaTime());
+        gsm.render(spriteBatch);
     }
 
     @Override
     public void dispose() {
-        shapeRenderer.dispose();
+        super.dispose();
+        if (gsm != null) {
+            // gsm.dispose() if implemented
+        }
+        if (spriteBatch != null) {
+            spriteBatch.dispose();
+        }
     }
 }
