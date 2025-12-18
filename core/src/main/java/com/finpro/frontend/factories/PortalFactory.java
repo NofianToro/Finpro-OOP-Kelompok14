@@ -25,7 +25,7 @@ public class PortalFactory {
         }
 
         portal.init(x, y, type, isHorizontal ? Portal.Orientation.HORIZONTAL : Portal.Orientation.VERTICAL,
-                new com.badlogic.gdx.math.Vector2(nx, ny));
+            new com.badlogic.gdx.math.Vector2(nx, ny));
         return portal;
     }
 }

@@ -1,38 +1,22 @@
 package com.finpro.frontend;
 
-import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 
-import static com.badlogic.gdx.math.Intersector.overlaps;
-
 public class Ground {
-    private static final float GROUND_HEIGHT = 50f;
-    private Rectangle collider;
+    private Rectangle bounds;
 
-    public Ground() {
-        collider = new Rectangle(0, 0, Gdx.graphics.getWidth() * 2, GROUND_HEIGHT);
-        this.collider = new Rectangle(0, 0, Gdx.graphics.getWidth() * 2, GROUND_HEIGHT);
+    public Ground(float x, float y, float width, float height) {
+        this.bounds = new Rectangle(x, y, width, height);
     }
 
-    public void update(float cameraX) {
-        this.collider.width = Gdx.graphics.getWidth() * 2;
-        this.collider.x = cameraX - Gdx.graphics.getWidth() / 2f - 500;
-        this.collider.y = 0;
-
+    public Rectangle getBounds() {
+        return bounds;
     }
 
-    public boolean isColliding(Rectangle playerCollider) {
-        return overlaps(collider, playerCollider);
+    public void render(ShapeRenderer sr) {
+        sr.setColor(Color.GREEN);
+        sr.rect(bounds.x, bounds.y, bounds.width, bounds.height);
     }
-
-    public float getTopY() {
-        return GROUND_HEIGHT;
-    }
-
-    public void renderShape(ShapeRenderer shapeRenderer) {
-        shapeRenderer.setColor(0.5f, 0.5f, 0.5f, 1f);
-        shapeRenderer.rect(collider.x, collider.y, collider.width, collider.height);
-    }
-
 }

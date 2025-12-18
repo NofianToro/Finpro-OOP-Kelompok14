@@ -6,27 +6,28 @@ import com.badlogic.gdx.math.Rectangle;
 
 public class Wall {
     private Rectangle bounds;
-    private boolean isExit;
+    private boolean isExit = false;
+    private boolean isBlackWall = false;
 
-    public Wall(float x, float y, float size, boolean isExit) {
-        this.bounds = new Rectangle(x, y, size, size);
-        this.isExit = isExit;
+    public Wall(float x, float y, float width, float height) {
+        this.bounds = new Rectangle(x, y, width, height);
     }
 
-    public void render(ShapeRenderer shapeRenderer) {
+    public Rectangle getBounds() { return bounds; }
+    public boolean isExit() { return isExit; }
+    public void setExit(boolean isExit) { this.isExit = isExit; }
+
+    public boolean isBlackWall() { return isBlackWall; }
+    public void setBlackWall(boolean isBlackWall) { this.isBlackWall = isBlackWall; }
+
+    public void render(ShapeRenderer sr) {
         if (isExit) {
-            shapeRenderer.setColor(Color.BLUE); // Exit zone
+            sr.setColor(Color.GREEN);
+        } else if (isBlackWall) {
+            sr.setColor(Color.BLACK); //Black for BlackWall
         } else {
-            shapeRenderer.setColor(0.6f, 0.4f, 0.2f, 1f);
+            sr.setColor(Color.RED);   //Red for Common Wall
         }
-        shapeRenderer.rect(bounds.x, bounds.y, bounds.width, bounds.height);
-    }
-
-    public Rectangle getBounds() {
-        return bounds;
-    }
-
-    public boolean isExit() {
-        return isExit;
+        sr.rect(bounds.x, bounds.y, bounds.width, bounds.height);
     }
 }

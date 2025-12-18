@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.finpro.frontend.obstacles.Wall;
+import com.finpro.frontend.observers.LevelListener;
 
 public class Player {
     private Vector2 position;
@@ -13,31 +14,39 @@ public class Player {
     private Rectangle collider;
     private boolean isOnGround;
     private boolean isFinished = false;
-
+    private Array<LevelListener> listeners;
     private final float WIDTH = 50f;
     private final float HEIGHT = 50f;
     private final float GRAVITY = 2000f;
-    private final float JUMP_FORCE = 800f;
+    private final float JUMP_FORCE = 570f;
     private final float SPEED = 300f;
 
-    public Player(Vector2 startPos) {
-        this.position = startPos;
+    public Player(float startX, float startY) {
+        this.position = new Vector2(startX, startY);
         this.velocity = new Vector2(0, 0);
-        this.collider = new Rectangle(startPos.x, startPos.y, WIDTH, HEIGHT);
+        this.collider = new Rectangle(startX, startY, WIDTH, HEIGHT);
+        this.listeners = new Array<>();
+    }
+
+    public void addListener(LevelListener listener) {
+        listeners.add(listener);
+    }
+
+    private void notifyLevelFinished() {
+        for (LevelListener listener : listeners) {
+            listener.onLevelFinished();
+        }
     }
 
     public void update(float delta, Array<Wall> walls) {
         velocity.y -= GRAVITY * delta;
-
         position.x += velocity.x * delta;
         updateCollider();
         checkCollisions(walls, true);
-
         position.y += velocity.y * delta;
         updateCollider();
-        isOnGround = false; // Reset ground
+        isOnGround = false;
         checkCollisions(walls, false);
-
         velocity.x = 0;
     }
 
@@ -45,7 +54,10 @@ public class Player {
         for (Wall wall : walls) {
             if (collider.overlaps(wall.getBounds())) {
                 if (wall.isExit()) {
-                    isFinished = true;
+                    if (!isFinished) {
+                        isFinished = true;
+                        notifyLevelFinished();
+                    }
                 }
 
                 if (isXAxis) {
@@ -101,5 +113,9 @@ public class Player {
     public void setPosition(float x, float y) {
         this.position.set(x, y);
         updateCollider();
+    }
+
+    public Vector2 getVelocity() {
+        return velocity;
     }
 }

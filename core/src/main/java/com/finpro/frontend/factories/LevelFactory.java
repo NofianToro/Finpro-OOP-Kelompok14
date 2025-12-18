@@ -1,78 +1,79 @@
 package com.finpro.frontend.factories;
 
+import com.badlogic.gdx.maps.MapLayer;
+import com.badlogic.gdx.maps.MapObject;
+import com.badlogic.gdx.maps.objects.RectangleMapObject;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.finpro.frontend.obstacles.Wall;
 
 public class LevelFactory {
-    // 32 px per Square
-    private final float TILE_SIZE = 32f;
-    private Vector2 startPosition;
+    private TiledMap map;
 
-    // Map Legends (Lebar 40 karakter, Tinggi 22 baris)
-    // # = Wall
-    // - = Air
-    // S = Spawn
-    // E = Exit
-    private String[] mapLayout = {
-            "########################################",
-            "#----#----------#------#--------------E#",
-            "#----#----------#------#--------------E#",
-            "#----#----------#------#--------------E#",
-            "#----#----------#------#--------------##",
-            "#----#----------#------#---------#######",
-            "######----------#------#---------#-----#",
-            "#---------------#------#---------#-----#",
-            "#---------------########---------#-----#",
-            "#--------------------------------#-----#",
-            "#--------------------------------#-----#",
-            "#--------------------------------#-----#",
-            "#--------------------------------#-----#",
-            "#-----#------#-------------------#-----#",
-            "#-----#------#-------------------#-----#",
-            "#-----#------#-------------------#-----#",
-            "#-----#------#-------#######-----#-----#",
-            "#-----#--S---#-------#-----#-----#-----#",
-            "#-----#------#-------#-----#-----#-----#",
-            "#-----########-------#-----#-----#-----#",
-            "#-----#------#-------#-----#-----#-----#",
-            "########################################"
-    };
+    public LevelFactory(TiledMap map) {
+        this.map = map;
+    }
 
-    public Array<Wall> createLevel() {
+    public Array<Wall> parseWalls() {
         Array<Wall> walls = new Array<>();
-        startPosition = new Vector2(100, 100);
 
-        for (int row = 0; row < mapLayout.length; row++) {
-            String line = mapLayout[row];
-            int cols = line.length();
-
-            for (int col = 0; col < cols; col++) {
-                char code = line.charAt(col);
-
-                float x = col * TILE_SIZE;
-                float y = (mapLayout.length - 1 - row) * TILE_SIZE;
-
-                switch (code) {
-                    case '#': // Wall
-                        walls.add(new Wall(x, y, TILE_SIZE, false));
-                        break;
-                    case 'S': // Spawn
-                        startPosition = new Vector2(x, y);
-                        break;
-                    case 'E': // Exit
-                        walls.add(new Wall(x, y, TILE_SIZE, true));
-                        break;
-                    case '-':
-                    default:
-                        break;
+        //Parse Common Wall
+        String[] normalLayers = {"Wall", "Ground"};
+        for (String layerName : normalLayers) {
+            MapLayer layer = map.getLayers().get(layerName);
+            if (layer != null) {
+                for (MapObject object : layer.getObjects()) {
+                    if (object instanceof RectangleMapObject) {
+                        Rectangle rect = ((RectangleMapObject) object).getRectangle();
+                        walls.add(new Wall(rect.x, rect.y, rect.width, rect.height));
+                    }
                 }
             }
         }
+
+        //Parse Exit
+        MapLayer exitLayer = map.getLayers().get("Exit");
+        if (exitLayer != null) {
+            for (MapObject object : exitLayer.getObjects()) {
+                if (object instanceof RectangleMapObject) {
+                    Rectangle rect = ((RectangleMapObject) object).getRectangle();
+                    Wall exitWall = new Wall(rect.x, rect.y, rect.width, rect.height);
+                    exitWall.setExit(true);
+                    walls.add(exitWall);
+                }
+            }
+        } else {
+            System.out.println("WARNING: Layer 'Exit' tidak ditemukan di Map!");
+        }
+
+        //Parse BlackwWall (Cannot Spawn Portal)
+        MapLayer blackWallLayer = map.getLayers().get("BlackWall");
+        if (blackWallLayer != null) {
+            for (MapObject object : blackWallLayer.getObjects()) {
+                if (object instanceof RectangleMapObject) {
+                    Rectangle rect = ((RectangleMapObject) object).getRectangle();
+
+                    Wall bw = new Wall(rect.x, rect.y, rect.width, rect.height);
+                    bw.setBlackWall(true);
+                    walls.add(bw);
+                }
+            }
+        }
+
         return walls;
     }
 
-    public Vector2 getStartPosition() {
-        return startPosition;
+    public Vector2 getPlayerSpawnPoint(TiledMap map) {
+        MapLayer spawnLayer = map.getLayers().get("Spawn");
+        if (spawnLayer != null && spawnLayer.getObjects().getCount() > 0) {
+            MapObject obj = spawnLayer.getObjects().get(0);
+            if (obj instanceof RectangleMapObject) {
+                Rectangle rect = ((RectangleMapObject) obj).getRectangle();
+                return new Vector2(rect.x, rect.y);
+            }
+        }
+        return new Vector2(100, 200);
     }
 }
