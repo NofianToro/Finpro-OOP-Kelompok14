@@ -40,7 +40,7 @@ public class Player {
         }
     }
 
-    public void update(float delta, Array<Wall> walls) {
+    public void update(float delta, Array<Wall> walls, float mapWidth, float mapHeight) {
         velocity.y -= GRAVITY * delta;
         if (velocity.y < TERMINAL_VELOCITY)
             velocity.y = TERMINAL_VELOCITY;
@@ -51,6 +51,19 @@ public class Player {
         updateCollider();
         isOnGround = false;
         checkCollisions(walls, false);
+
+        // Map Boundary Checks
+        if (position.x < 0)
+            position.x = 0;
+        if (position.x > mapWidth - WIDTH)
+            position.x = mapWidth - WIDTH;
+        if (position.y < 0) { // If falls below map
+            position.y = 0; // Or handle death/respawn
+            isOnGround = true;
+            velocity.y = 0;
+        }
+
+        updateCollider();
 
         // Apply air resistance only to portal momentum
         if (hasPortalMomentum) {
