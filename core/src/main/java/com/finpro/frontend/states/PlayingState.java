@@ -58,7 +58,7 @@ public class PlayingState implements GameState, LevelListener {
     private final int screenWidth;
     private final int screenHeight;
 
-    private final String[] levels = {"map/level_1.tmx", "map/level_2.tmx", "map/level_3.tmx", "map/level_4.tmx"};
+    private final String[] levels = { "map/level_1.tmx", "map/level_2.tmx", "map/level_3.tmx", "map/level_4.tmx" };
     private int currentLevelIndex = 0;
 
     public PlayingState(GameStateManager gsm) {
@@ -80,9 +80,12 @@ public class PlayingState implements GameState, LevelListener {
     }
 
     private void loadLevel(int levelIndex) {
-        if (map != null) map.dispose();
-        if (activeProjectiles != null) activeProjectiles.clear();
-        if (activePortals != null) activePortals.clear();
+        if (map != null)
+            map.dispose();
+        if (activeProjectiles != null)
+            activeProjectiles.clear();
+        if (activePortals != null)
+            activePortals.clear();
 
         try {
             map = new TmxMapLoader().load(levels[levelIndex]);
@@ -106,9 +109,12 @@ public class PlayingState implements GameState, LevelListener {
         player = new Player(spawnPos.x, spawnPos.y);
         player.addListener(this);
 
-        if (portalPool == null) portalPool = new PortalPool();
-        if (projectilePool == null) projectilePool = new ProjectilePool();
-        if (portalFactory == null) portalFactory = new PortalFactory(portalPool);
+        if (portalPool == null)
+            portalPool = new PortalPool();
+        if (projectilePool == null)
+            projectilePool = new ProjectilePool();
+        if (portalFactory == null)
+            portalFactory = new PortalFactory(portalPool);
 
         activeProjectiles = new Array<>();
         activePortals = new Array<>();
@@ -185,7 +191,7 @@ public class PlayingState implements GameState, LevelListener {
             }
 
             if (p.getBounds().x < 0 || p.getBounds().x > mapWidth ||
-                p.getBounds().y < 0 || p.getBounds().y > mapHeight) {
+                    p.getBounds().y < 0 || p.getBounds().y > mapHeight) {
                 p.setActive(false);
                 projectilePool.free(p);
                 iter.remove();
@@ -220,6 +226,29 @@ public class PlayingState implements GameState, LevelListener {
         float targetX = exit.getPosition().x;
         float targetY = exit.getPosition().y;
 
+        // Get player velocity
+        Vector2 currentVelocity = player.getVelocity();
+        Vector2 entryNormal = entryPortal.getNormal();
+        Vector2 exitNormal = exit.getNormal();
+
+        // Calculate velocity
+        float speedIntoPortal = -(currentVelocity.x * entryNormal.x + currentVelocity.y * entryNormal.y);
+
+        // Calculate perpendicular velocity
+        float entryTangentX = -entryNormal.y;
+        float entryTangentY = entryNormal.x;
+        float tangentSpeed = currentVelocity.x * entryTangentX + currentVelocity.y * entryTangentY;
+
+        // Exit tangent (perpendicular to exit normal)
+        float exitTangentX = -exitNormal.y;
+        float exitTangentY = exitNormal.x;
+
+        // New velocity: speed coming OUT of exit portal along exit normal + tangent
+        // component
+        float newVelX = speedIntoPortal * exitNormal.x + tangentSpeed * exitTangentX;
+        float newVelY = speedIntoPortal * exitNormal.y + tangentSpeed * exitTangentY;
+
+        // Calculate exit position
         if (exit.getOrientation() == Portal.Orientation.HORIZONTAL) {
             targetX += (exit.getBounds().width - player.getBounds().width) / 2f;
             targetY += exit.getNormal().y * offset;
@@ -229,6 +258,7 @@ public class PlayingState implements GameState, LevelListener {
         }
 
         player.setPosition(targetX, targetY);
+        player.setVelocity(newVelX, newVelY);
     }
 
     public void shoot(String type, float screenX, float screenY) {
@@ -264,10 +294,79 @@ public class PlayingState implements GameState, LevelListener {
 
         boolean horizontal = iw > ih;
 
+        float portalLength = 64f;
+        float padding = 4f;
+        float portalX, portalY;
+
+        // 1. Initial Clamping to the Parent Wall
+        if (horizontal) {
+            float prCenterX = pr.x + pr.width / 2f;
+            portalX = prCenterX - portalLength / 2f;
+            portalX = MathUtils.clamp(portalX, wr.x + padding, wr.x + wr.width - portalLength - padding);
+            portalY = pr.y;
+        } else {
+            float prCenterY = pr.y + pr.height / 2f;
+            portalY = prCenterY - portalLength / 2f;
+            portalY = MathUtils.clamp(portalY, wr.y + padding, wr.y + wr.height - portalLength - padding);
+            portalX = pr.x;
+        }
+
+        // 2. Obstruction Check: Push away from other overlapping walls
+        Rectangle proposed = new Rectangle(portalX, portalY,
+                horizontal ? portalLength : 10f,
+                horizontal ? 10f : portalLength);
+
+        for (Wall other : walls) {
+            if (other == wall)
+                continue; // Don't check against the wall we are attached to
+
+            if (proposed.overlaps(other.getBounds())) {
+                Rectangle ow = other.getBounds();
+
+                if (horizontal) {
+                    // Check if obstruction is to the Right or Left
+                    // We compare centers to decide push direction
+                    if (ow.x + ow.width / 2f > proposed.x + proposed.width / 2f) {
+                        // Obstruction is on the Right -> Push Left
+                        portalX = ow.x - portalLength - padding;
+                    } else {
+                        // Obstruction is on the Left -> Push Right
+                        portalX = ow.x + ow.width + padding;
+                    }
+                } else {
+                    // Vertical: Check Top or Bottom
+                    if (ow.y + ow.height / 2f > proposed.y + proposed.height / 2f) {
+                        // Obstruction is Above -> Push Down
+                        portalY = ow.y - portalLength - padding;
+                    } else {
+                        // Obstruction is Below -> Push Up
+                        portalY = ow.y + ow.height + padding;
+                    }
+                }
+            }
+        }
+
+        // 3. Final Re-Clamping (ensure we didn't push it off the parent wall)
+        if (horizontal) {
+            portalX = MathUtils.clamp(portalX, wr.x + padding, wr.x + wr.width - portalLength - padding);
+        } else {
+            portalY = MathUtils.clamp(portalY, wr.y + padding, wr.y + wr.height - portalLength - padding);
+        }
+
+        // 4. Check for overlaps with other active portals
+        Rectangle finalProposed = new Rectangle(portalX, portalY,
+                horizontal ? portalLength : 10f,
+                horizontal ? 10f : portalLength);
+
+        for (Portal active : activePortals) {
+            if (active.getBounds().overlaps(finalProposed)) {
+                return; // Cancel spawn if overlapping another portal
+            }
+        }
+
         Portal portal = portalFactory.createPortal(
-            pr.x, pr.y, p.getType(), horizontal,
-            p.getVelocity().x, p.getVelocity().y
-        );
+                portalX, portalY, p.getType(), horizontal,
+                p.getVelocity().x, p.getVelocity().y);
 
         activePortals.add(portal);
 
@@ -287,8 +386,10 @@ public class PlayingState implements GameState, LevelListener {
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        for (Portal portal : activePortals) portal.render(shapeRenderer);
-        for (Projectile p : activeProjectiles) p.render(shapeRenderer);
+        for (Portal portal : activePortals)
+            portal.render(shapeRenderer);
+        for (Projectile p : activeProjectiles)
+            p.render(shapeRenderer);
         player.render(shapeRenderer);
 
         shapeRenderer.end();
@@ -297,7 +398,9 @@ public class PlayingState implements GameState, LevelListener {
     @Override
     public void dispose() {
         shapeRenderer.dispose();
-        if (map != null) map.dispose();
-        if (mapRenderer != null) mapRenderer.dispose();
+        if (map != null)
+            map.dispose();
+        if (mapRenderer != null)
+            mapRenderer.dispose();
     }
 }

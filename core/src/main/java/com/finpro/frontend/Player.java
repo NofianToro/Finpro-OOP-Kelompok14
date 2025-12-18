@@ -14,12 +14,14 @@ public class Player {
     private Rectangle collider;
     private boolean isOnGround;
     private boolean isFinished = false;
+    private boolean hasPortalMomentum = false;
     private Array<LevelListener> listeners;
     private final float WIDTH = 50f;
     private final float HEIGHT = 50f;
     private final float GRAVITY = 2000f;
     private final float JUMP_FORCE = 570f;
     private final float SPEED = 300f;
+    private final float TERMINAL_VELOCITY = -1000f;
 
     public Player(float startX, float startY) {
         this.position = new Vector2(startX, startY);
@@ -40,6 +42,8 @@ public class Player {
 
     public void update(float delta, Array<Wall> walls) {
         velocity.y -= GRAVITY * delta;
+        if (velocity.y < TERMINAL_VELOCITY)
+            velocity.y = TERMINAL_VELOCITY;
         position.x += velocity.x * delta;
         updateCollider();
         checkCollisions(walls, true);
@@ -47,7 +51,15 @@ public class Player {
         updateCollider();
         isOnGround = false;
         checkCollisions(walls, false);
-        velocity.x = 0;
+
+        // Apply air resistance only to portal momentum
+        if (hasPortalMomentum) {
+            velocity.x *= 0.984f;
+            if (Math.abs(velocity.x) < 10f) {
+                velocity.x = 0;
+                hasPortalMomentum = false;
+            }
+        }
     }
 
     private void checkCollisions(Array<Wall> walls, boolean isXAxis) {
@@ -86,10 +98,19 @@ public class Player {
 
     public void moveLeft(float delta) {
         velocity.x = -SPEED;
+        hasPortalMomentum = false; // Clear portal momentum when player provides input
     }
 
     public void moveRight(float delta) {
         velocity.x = SPEED;
+        hasPortalMomentum = false; // Clear portal momentum when player provides input
+    }
+
+    public void stopHorizontalMovement() {
+        // Don't stop if we have portal momentum
+        if (!hasPortalMomentum) {
+            velocity.x = 0;
+        }
     }
 
     public void jump() {
@@ -117,5 +138,13 @@ public class Player {
 
     public Vector2 getVelocity() {
         return velocity;
+    }
+
+    public void setVelocity(float x, float y) {
+        this.velocity.set(x, y);
+        // Mark that we have portal momentum if there's horizontal velocity
+        if (Math.abs(x) > 0.1f) {
+            hasPortalMomentum = true;
+        }
     }
 }
