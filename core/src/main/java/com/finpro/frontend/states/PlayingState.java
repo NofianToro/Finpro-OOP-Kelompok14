@@ -301,19 +301,14 @@ public class PlayingState implements GameState, LevelListener {
 
         float portalX, portalY;
 
-        // --- SNAP LOGIC ---
-        // Force the portal to sit exacty ON the wall surface depending on direction
-
         Rectangle wr = wall.getBounds();
         Rectangle pr = p.getBounds();
 
         if (horizontal) {
-            // Horizontal Portal (Floor/Ceiling)
-            // Determine X (Clamped to wall width)
             portalX = pr.x + pr.width / 2f - portalLength / 2f;
             portalX = MathUtils.clamp(portalX, wr.x + padding, wr.x + wr.width - portalLength - padding);
-
             // Determine Y (Top or Bottom Face)
+
             if (p.getVelocity().y < 0) {
                 // Moving Down -> Hit Top Face (Floor)
                 portalY = wr.y + wr.height;
