@@ -58,7 +58,7 @@ public class PlayingState implements GameState, LevelListener {
     private final int screenWidth;
     private final int screenHeight;
 
-    private final String[] levels = { "map/level_1.tmx", "map/level_2.tmx", "map/level_3.tmx", "map/level_4.tmx" };
+    private final String[] levels = { "map/intro.tmx", "map/level_1.tmx", "map/level_2.tmx", "map/level_3.tmx", "map/level_4.tmx" };
     private int currentLevelIndex = 0;
 
     public PlayingState(GameStateManager gsm) {
