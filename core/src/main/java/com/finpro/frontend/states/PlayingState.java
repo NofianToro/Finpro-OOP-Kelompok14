@@ -416,7 +416,19 @@ public class PlayingState implements GameState, LevelListener {
         Vector2 mousePos = new Vector2(mousePos3.x, mousePos3.y);
 
         // Render Player Sprites
+        // Render Player Sprites
         player.render(batch, mousePos);
+
+        // Render Projectiles
+        for (Projectile p : activeProjectiles) {
+            String type = p.getType();
+            // Default to blue if null, or handle types
+            if ("ORANGE".equals(type)) {
+                p.render(batch, bulletOrangeTex);
+            } else {
+                p.render(batch, bulletBlueTex);
+            }
+        }
 
         batch.end();
 
@@ -426,8 +438,9 @@ public class PlayingState implements GameState, LevelListener {
         // Debug render for portal bounds
         // for (Portal portal : activePortals) portal.render(shapeRenderer);
 
-        for (Projectile p : activeProjectiles)
-            p.render(shapeRenderer);
+        // Debug Projectiles - Disabled for Sprite Rendering
+        // for (Projectile p : activeProjectiles) p.render(shapeRenderer);
+
         // player.render(shapeRenderer); // Debug block disabled
 
         shapeRenderer.end();
