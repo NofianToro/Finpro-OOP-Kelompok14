@@ -68,6 +68,30 @@ public class Projectile {
         shapeRenderer.rect(position.x, position.y, width, height);
     }
 
+    public void render(com.badlogic.gdx.graphics.g2d.SpriteBatch batch, com.badlogic.gdx.graphics.Texture texture) {
+        if (!active)
+            return;
+
+        // Calculate rotation
+        float angle = velocity.angleDeg();
+
+        // Draw centered? Or just at position (bottom-left of bounds)
+        // Texture might be larger than 8x8.
+        // Let's assume we draw it at matching size or slightly scaled?
+        // Let's draw it at width/height for now, but rotated.
+
+        batch.draw(texture,
+                position.x, position.y,
+                width / 2, height / 2, // Origin center
+                width, height, // Width height
+                1, 1, // scale
+                angle, // rotation
+                0, 0, // srcX, srcY
+                texture.getWidth(), texture.getHeight(), // srcWidth, srcHeight
+                false, false // flip
+        );
+    }
+
     public boolean isActive() {
         return active;
     }

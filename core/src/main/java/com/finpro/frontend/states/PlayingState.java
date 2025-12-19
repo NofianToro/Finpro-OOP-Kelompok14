@@ -62,13 +62,15 @@ public class PlayingState implements GameState, LevelListener {
     private ProjectileMovementStrategy linearStrategy;
 
     private Texture bluePortalTex, orangePortalTex;
+    private Texture bulletBlueTex, bulletOrangeTex;
     private Animation<TextureRegion> bluePortalAnim, orangePortalAnim;
     private SpriteBatch batch;
 
     private final int screenWidth;
     private final int screenHeight;
 
-    private final String[] levels = { "map/level_1.tmx", "map/level_2.tmx", "map/level_3.tmx", "map/level_4.tmx" };
+    private final String[] levels = { "map/intro.tmx", "map/level_1.tmx", "map/level_2.tmx", "map/level_3.tmx",
+            "map/level_4.tmx" };
     private int currentLevelIndex = 0;
 
     public PlayingState(GameStateManager gsm) {
@@ -150,6 +152,13 @@ public class PlayingState implements GameState, LevelListener {
             orangePortalAnim.setPlayMode(Animation.PlayMode.LOOP);
         }
 
+        // Load Bullet Assets
+        if (bulletBlueTex == null) {
+            bulletBlueTex = new Texture("assets/player/Bullet/bullet_blue.png");
+        }
+        if (bulletOrangeTex == null) {
+            bulletOrangeTex = new Texture("assets/player/Bullet/bullet_orange.png");
+        }
         camera.position.set(player.getBounds().x, player.getBounds().y, 0);
         camera.update();
     }
@@ -433,6 +442,10 @@ public class PlayingState implements GameState, LevelListener {
             bluePortalTex.dispose();
         if (orangePortalTex != null)
             orangePortalTex.dispose();
+        if (bulletBlueTex != null)
+            bulletBlueTex.dispose();
+        if (bulletOrangeTex != null)
+            bulletOrangeTex.dispose();
 
         if (map != null)
             map.dispose();
