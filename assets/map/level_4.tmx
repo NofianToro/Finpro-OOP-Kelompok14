@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="45" tilewidth="16" tileheight="16" infinite="0" nextlayerid="9" nextobjectid="7">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="45" tilewidth="16" tileheight="16" infinite="0" nextlayerid="16" nextobjectid="7">
  <tileset firstgid="1" name="Cyberpunk" tilewidth="16" tileheight="16" tilecount="256" columns="16">
   <image source="Cyberpunk.png" width="256" height="256"/>
  </tileset>
@@ -12,15 +12,47 @@
  <tileset firstgid="851" name="mainlevbuild" tilewidth="16" tileheight="16" tilecount="2560" columns="64">
   <image source="mainlevbuild.png" width="1024" height="640"/>
  </tileset>
+ <tileset firstgid="3411" name="level_tileset" tilewidth="16" tileheight="16" tilecount="324" columns="18">
+  <image source="level_tileset.png" width="300" height="300"/>
+ </tileset>
+ <imagelayer id="14" name="Bg mood">
+  <image source="background/Night/1.png" width="1280" height="720"/>
+ </imagelayer>
+ <imagelayer id="15" name="Bg 2" offsetx="750" offsety="240">
+  <image source="background/Night/2.png" width="576" height="324"/>
+ </imagelayer>
+ <imagelayer id="13" name="Bg 1" offsetx="450" offsety="196">
+  <image source="background/Night/3.png" width="576" height="324"/>
+ </imagelayer>
+ <layer id="10" name="Bg" width="80" height="45">
+  <data encoding="base64" compression="zlib">
+   eJztlEsKAjEQBZsMflZeQm+gm/EKev+L+FmbzSwHpBOoPH2BUGSV0FVkPkRc657NFG913800aX/qpP2pk/anTtrftzxGxCn4d6j2d66zuwT/DtX+RiXtT520P3W2zP9dIl4lz8y9y+p1JvvbTxG7Kc/MvcvqdXZ/7s/9uT/35/7c33/1R/CX+iPo/tg+e3Ntro/6vz8L31vvPntzba6b+r9vJ74n9+f+RuhKrT9VjtKfKt2f+3N/unR/bX25v7a+3J8W6Z7USftTJ+1PnbQ/ddL+1En7UyftT520P3XS/tRJ+1Mn7U+dtD91fgDwTlGH
+  </data>
+ </layer>
+ <layer id="12" name="Obstacle" width="80" height="45">
+  <data encoding="base64" compression="zlib">
+   eJzt2LkRAjEMQFFh0QG0AP33wdEBLB1wVIDyzTzDGJb3EmUe+YeKAAAAAAD4b6cWcW6jt/hdU7W76dftWe1e+nXLjFjn6C0AAAAAgBEOLeLovtrtUu2u+nW7V7vHQvptMmKb8/lJq3q/LeS+v6t/7HM+AeBbvAHiJgwX
+  </data>
+ </layer>
+ <layer id="11" name="Wall" width="80" height="45">
+  <data encoding="base64" compression="zlib">
+   eJztmUlOwzAUhk0DZbgBwwal6oZBQkXds+ECcOH2ApDABRgvwLjkt4irKoobT7Ff4H3Sp6ekzdC/dp4U50KIEcx7UsdwVllUzhydt3xWVs4129IJPO9RnS7lVlS/p3B01bHlUi0126XD/5+6XgoaqCxTjyfbOu4iDAdUfqnHk22ddhGGA7HGX65x1PB9tb/u8nEUx1+XToQ+G5dzUMvvCl73qFKbv4wbnJ8fnJ8fnJ8fnJ8fnJ8f6v0F4waPPz84Pz/a8rsZCHELC1jCO3g/iHV39GnL7wFZPcIn+Axf4Cvnt6Atvzdk9Q4/4Cf8gt+c34K2/DYyIYZwE27BbbiTtZ93DcqY5VfX5XngMMJ+U9Rxoepe1uxure7DA4P8DkWaNSVTzgJf/zhr9qhWT+CpQX7y/lKsKZlyEfj6oZH3F3v82awphZ4fOlT/sEXeH+U1pdDzQ4fqH7aEfr6EXlMKPT90uI6/0M8Xk2o7f2OMP5/5+5/6rw7X/Lj//uKaX6p1OVOo91/qxOq/fzU/6v2XOtT7L3Wo91/qUO+/1OH+6wf3Xz+4//oRq/+6vn+hTqz+yzAMwzCr+AGCMTnF
+  </data>
+ </layer>
+ <layer id="9" name="Ground" width="80" height="45">
+  <data encoding="base64" compression="zlib">
+   eJzt1dEJwkAQRdG1BGMDRisI9v+hHWhFmbSQhywD58D7Hy4LOwbQzbv2mX1EY/pl9Mvol9Evo19Gv8y39pt9RGNr7Tn7iMa2oV/C+8t4fxnvL6NfRr+Mfhn9Msf/+5p9BAAAAAAAwB9cL2Msdmq32r222qk99NNPv7Y7+u0ZGT+R
+  </data>
+ </layer>
  <objectgroup id="5" name="Ground">
   <object id="1" x="0" y="642" width="1281.82" height="73.1515"/>
  </objectgroup>
  <objectgroup color="#c80000" id="6" name="Wall">
   <object id="2" x="962.667" y="320" width="320" height="317.333"/>
-  <object id="3" x="1.33333" y="-1.33333" width="720" height="114.667"/>
+  <object id="3" x="1.33333" y="-1.33333" width="720" height="128.167"/>
   <object id="4" x="320" y="321.333" width="480" height="157.333"/>
  </objectgroup>
- <objectgroup id="7" name="Spawnr">
+ <objectgroup id="7" name="Spawn">
   <object id="5" x="32" y="577.333" width="29.3333" height="62.6667"/>
  </objectgroup>
  <objectgroup id="8" name="Exit">

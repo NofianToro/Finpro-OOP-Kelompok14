@@ -1,5 +1,11 @@
 package com.finpro.frontend.states;
 
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.Vector2;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
@@ -55,10 +61,16 @@ public class PlayingState implements GameState, LevelListener {
     private Array<Portal> activePortals;
     private ProjectileMovementStrategy linearStrategy;
 
+    private Texture bluePortalTex, orangePortalTex;
+    private Texture bulletBlueTex, bulletOrangeTex;
+    private Animation<TextureRegion> bluePortalAnim, orangePortalAnim;
+    private SpriteBatch batch;
+
     private final int screenWidth;
     private final int screenHeight;
 
-    private final String[] levels = { "map/intro.tmx", "map/level_1.tmx", "map/level_2.tmx", "map/level_3.tmx", "map/level_4.tmx" };
+    private final String[] levels = { "map/intro.tmx", "map/level_1.tmx", "map/level_2.tmx", "map/level_3.tmx",
+            "map/level_4.tmx" };
     private int currentLevelIndex = 0;
 
     public PlayingState(GameStateManager gsm) {
@@ -120,6 +132,33 @@ public class PlayingState implements GameState, LevelListener {
         activePortals = new Array<>();
         linearStrategy = new LinearMovementStrategy();
 
+        if (batch == null)
+            batch = new SpriteBatch();
+
+        // Load Portal Assets
+        if (bluePortalTex == null) {
+            bluePortalTex = new Texture("assets/portal_strip_blue.png");
+            // 512 width / 8 frames = 64px per frame. Verified 512 width.
+            TextureRegion[][] tmp = TextureRegion.split(bluePortalTex, bluePortalTex.getWidth() / 8,
+                    bluePortalTex.getHeight());
+            bluePortalAnim = new Animation<>(0.1f, tmp[0]);
+            bluePortalAnim.setPlayMode(Animation.PlayMode.LOOP);
+        }
+        if (orangePortalTex == null) {
+            orangePortalTex = new Texture("assets/portal_strip_orange.png");
+            TextureRegion[][] tmp = TextureRegion.split(orangePortalTex, orangePortalTex.getWidth() / 8,
+                    orangePortalTex.getHeight());
+            orangePortalAnim = new Animation<>(0.1f, tmp[0]);
+            orangePortalAnim.setPlayMode(Animation.PlayMode.LOOP);
+        }
+
+        // Load Bullet Assets
+        if (bulletBlueTex == null) {
+            bulletBlueTex = new Texture("assets/player/Bullet/bullet_blue.png");
+        }
+        if (bulletOrangeTex == null) {
+            bulletOrangeTex = new Texture("assets/player/Bullet/bullet_orange.png");
+        }
         camera.position.set(player.getBounds().x, player.getBounds().y, 0);
         camera.update();
     }
@@ -149,7 +188,7 @@ public class PlayingState implements GameState, LevelListener {
     @Override
     public void update(float delta) {
         inputHandler.handleInput(player, delta);
-        player.update(delta, walls);
+        player.update(delta, walls, mapWidth, mapHeight);
         updateProjectiles(delta);
         updatePortals(delta);
         updateCamera();
@@ -286,81 +325,58 @@ public class PlayingState implements GameState, LevelListener {
             }
         }
 
-        Rectangle pr = p.getBounds();
-        Rectangle wr = wall.getBounds();
+        float prevY = p.getPreviousPosition().y;
+        float prevTop = prevY + p.getBounds().height;
+        float wallY = wall.getBounds().y;
+        float wallTop = wall.getBounds().y + wall.getBounds().height;
 
-        float iw = Math.min(pr.x + pr.width, wr.x + wr.width) - Math.max(pr.x, wr.x);
-        float ih = Math.min(pr.y + pr.height, wr.y + wr.height) - Math.max(pr.y, wr.y);
-
-        boolean horizontal = iw > ih;
+        boolean wasOverlappingY = prevY < wallTop && prevTop > wallY;
+        boolean horizontal = !wasOverlappingY; // Hitting Top/Bottom means NOT overlapping on Y previously
 
         float portalLength = 64f;
+        float portalDepth = 10f; // Thickness of the portal visual
         float padding = 4f;
+
         float portalX, portalY;
 
-        // 1. Initial Clamping to the Parent Wall
+        Rectangle wr = wall.getBounds();
+        Rectangle pr = p.getBounds();
+
         if (horizontal) {
-            float prCenterX = pr.x + pr.width / 2f;
-            portalX = prCenterX - portalLength / 2f;
+            portalX = pr.x + pr.width / 2f - portalLength / 2f;
             portalX = MathUtils.clamp(portalX, wr.x + padding, wr.x + wr.width - portalLength - padding);
-            portalY = pr.y;
+
+            if (p.getVelocity().y < 0) {
+                portalY = wr.y + wr.height;
+            } else {
+                portalY = wr.y - portalDepth;
+            }
         } else {
-            float prCenterY = pr.y + pr.height / 2f;
-            portalY = prCenterY - portalLength / 2f;
+            portalY = pr.y + pr.height / 2f - portalLength / 2f;
             portalY = MathUtils.clamp(portalY, wr.y + padding, wr.y + wr.height - portalLength - padding);
-            portalX = pr.x;
-        }
 
-        // 2. Obstruction Check: Push away from other overlapping walls
-        Rectangle proposed = new Rectangle(portalX, portalY,
-                horizontal ? portalLength : 10f,
-                horizontal ? 10f : portalLength);
-
-        for (Wall other : walls) {
-            if (other == wall)
-                continue; // Don't check against the wall we are attached to
-
-            if (proposed.overlaps(other.getBounds())) {
-                Rectangle ow = other.getBounds();
-
-                if (horizontal) {
-                    // Check if obstruction is to the Right or Left
-                    // We compare centers to decide push direction
-                    if (ow.x + ow.width / 2f > proposed.x + proposed.width / 2f) {
-                        // Obstruction is on the Right -> Push Left
-                        portalX = ow.x - portalLength - padding;
-                    } else {
-                        // Obstruction is on the Left -> Push Right
-                        portalX = ow.x + ow.width + padding;
-                    }
-                } else {
-                    // Vertical: Check Top or Bottom
-                    if (ow.y + ow.height / 2f > proposed.y + proposed.height / 2f) {
-                        // Obstruction is Above -> Push Down
-                        portalY = ow.y - portalLength - padding;
-                    } else {
-                        // Obstruction is Below -> Push Up
-                        portalY = ow.y + ow.height + padding;
-                    }
-                }
+            if (p.getVelocity().x > 0) {
+                portalX = wr.x - portalDepth;
+            } else {
+                portalX = wr.x + wr.width;
             }
         }
 
-        // 3. Final Re-Clamping (ensure we didn't push it off the parent wall)
-        if (horizontal) {
-            portalX = MathUtils.clamp(portalX, wr.x + padding, wr.x + wr.width - portalLength - padding);
-        } else {
-            portalY = MathUtils.clamp(portalY, wr.y + padding, wr.y + wr.height - portalLength - padding);
+        Rectangle proposed = new Rectangle(portalX, portalY,
+                horizontal ? portalLength : portalDepth,
+                horizontal ? portalDepth : portalLength);
+
+        for (Wall other : walls) {
+            if (other == wall)
+                continue;
+            if (proposed.overlaps(other.getBounds())) {
+                return;
+            }
         }
 
-        // 4. Check for overlaps with other active portals
-        Rectangle finalProposed = new Rectangle(portalX, portalY,
-                horizontal ? portalLength : 10f,
-                horizontal ? 10f : portalLength);
-
         for (Portal active : activePortals) {
-            if (active.getBounds().overlaps(finalProposed)) {
-                return; // Cancel spawn if overlapping another portal
+            if (active.getBounds().overlaps(proposed)) {
+                return;
             }
         }
 
@@ -383,14 +399,36 @@ public class PlayingState implements GameState, LevelListener {
         mapRenderer.setView(camera);
         mapRenderer.render();
 
+        // Render Portals (Sprites)
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+        for (Portal portal : activePortals) {
+            portal.update(Gdx.graphics.getDeltaTime()); // Update animation state
+            if ("BLUE".equals(portal.getType())) {
+                portal.render(batch, bluePortalAnim);
+            } else {
+                portal.render(batch, orangePortalAnim);
+            }
+        }
+
+        // Get Mouse aim
+        Vector3 mousePos3 = camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+        Vector2 mousePos = new Vector2(mousePos3.x, mousePos3.y);
+
+        // Render Player Sprites
+        player.render(batch, mousePos);
+
+        batch.end();
+
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        for (Portal portal : activePortals)
-            portal.render(shapeRenderer);
+        // Debug render for portal bounds
+        // for (Portal portal : activePortals) portal.render(shapeRenderer);
+
         for (Projectile p : activeProjectiles)
             p.render(shapeRenderer);
-        player.render(shapeRenderer);
+        // player.render(shapeRenderer); // Debug block disabled
 
         shapeRenderer.end();
     }
@@ -398,9 +436,22 @@ public class PlayingState implements GameState, LevelListener {
     @Override
     public void dispose() {
         shapeRenderer.dispose();
+        if (batch != null)
+            batch.dispose();
+        if (bluePortalTex != null)
+            bluePortalTex.dispose();
+        if (orangePortalTex != null)
+            orangePortalTex.dispose();
+        if (bulletBlueTex != null)
+            bulletBlueTex.dispose();
+        if (bulletOrangeTex != null)
+            bulletOrangeTex.dispose();
+
         if (map != null)
             map.dispose();
         if (mapRenderer != null)
             mapRenderer.dispose();
+        if (player != null)
+            player.dispose();
     }
 }
