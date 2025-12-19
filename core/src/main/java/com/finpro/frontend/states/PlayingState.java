@@ -1,5 +1,11 @@
 package com.finpro.frontend.states;
 
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.Vector2;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
@@ -54,6 +60,10 @@ public class PlayingState implements GameState, LevelListener {
     private Array<Projectile> activeProjectiles;
     private Array<Portal> activePortals;
     private ProjectileMovementStrategy linearStrategy;
+
+    private Texture bluePortalTex, orangePortalTex;
+    private Animation<TextureRegion> bluePortalAnim, orangePortalAnim;
+    private SpriteBatch batch;
 
     private final int screenWidth;
     private final int screenHeight;
@@ -119,6 +129,26 @@ public class PlayingState implements GameState, LevelListener {
         activeProjectiles = new Array<>();
         activePortals = new Array<>();
         linearStrategy = new LinearMovementStrategy();
+
+        if (batch == null)
+            batch = new SpriteBatch();
+
+        // Load Portal Assets
+        if (bluePortalTex == null) {
+            bluePortalTex = new Texture("assets/portal_strip_blue.png");
+            // 512 width / 8 frames = 64px per frame. Verified 512 width.
+            TextureRegion[][] tmp = TextureRegion.split(bluePortalTex, bluePortalTex.getWidth() / 8,
+                    bluePortalTex.getHeight());
+            bluePortalAnim = new Animation<>(0.1f, tmp[0]);
+            bluePortalAnim.setPlayMode(Animation.PlayMode.LOOP);
+        }
+        if (orangePortalTex == null) {
+            orangePortalTex = new Texture("assets/portal_strip_orange.png");
+            TextureRegion[][] tmp = TextureRegion.split(orangePortalTex, orangePortalTex.getWidth() / 8,
+                    orangePortalTex.getHeight());
+            orangePortalAnim = new Animation<>(0.1f, tmp[0]);
+            orangePortalAnim.setPlayMode(Animation.PlayMode.LOOP);
+        }
 
         camera.position.set(player.getBounds().x, player.getBounds().y, 0);
         camera.update();
@@ -286,7 +316,6 @@ public class PlayingState implements GameState, LevelListener {
             }
         }
 
-        // Determine Orientation (From previous step)
         float prevY = p.getPreviousPosition().y;
         float prevTop = prevY + p.getBounds().height;
         float wallY = wall.getBounds().y;
@@ -307,52 +336,35 @@ public class PlayingState implements GameState, LevelListener {
         if (horizontal) {
             portalX = pr.x + pr.width / 2f - portalLength / 2f;
             portalX = MathUtils.clamp(portalX, wr.x + padding, wr.x + wr.width - portalLength - padding);
-            // Determine Y (Top or Bottom Face)
 
             if (p.getVelocity().y < 0) {
-                // Moving Down -> Hit Top Face (Floor)
                 portalY = wr.y + wr.height;
             } else {
-                // Moving Up -> Hit Bottom Face (Ceiling)
-                portalY = wr.y - portalDepth; // Portal hangs below
+                portalY = wr.y - portalDepth;
             }
         } else {
-            // Vertical Portal (Walls)
-            // Determine Y (Clamped to wall height)
             portalY = pr.y + pr.height / 2f - portalLength / 2f;
             portalY = MathUtils.clamp(portalY, wr.y + padding, wr.y + wr.height - portalLength - padding);
 
-            // Determine X (Left or Right Face)
             if (p.getVelocity().x > 0) {
-                // Moving Right -> Hit Left Face
-                portalX = wr.x - portalDepth; // Portal attached to left side
+                portalX = wr.x - portalDepth;
             } else {
-                // Moving Left -> Hit Right Face
                 portalX = wr.x + wr.width;
             }
         }
 
-        // --- COLLISION/OVERLAP CHECK ---
-        // Push away from other walls or cancel if obstructed
         Rectangle proposed = new Rectangle(portalX, portalY,
                 horizontal ? portalLength : portalDepth,
                 horizontal ? portalDepth : portalLength);
 
-        // Simple check: if fully obstructed by another wall, cancel.
-        // Or if barely touching, maybe safe.
-        // Let's strictly check for overlap with other walls.
         for (Wall other : walls) {
             if (other == wall)
                 continue;
             if (proposed.overlaps(other.getBounds())) {
-                // Obstructed. Cancel spawn for now to avoid complexity/bugs.
-                // Or maybe just try to shift it?
-                // For simplicity/robustness: Cancel.
                 return;
             }
         }
 
-        // Check Portal Overlap
         for (Portal active : activePortals) {
             if (active.getBounds().overlaps(proposed)) {
                 return;
@@ -378,14 +390,36 @@ public class PlayingState implements GameState, LevelListener {
         mapRenderer.setView(camera);
         mapRenderer.render();
 
+        // Render Portals (Sprites)
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+        for (Portal portal : activePortals) {
+            portal.update(Gdx.graphics.getDeltaTime()); // Update animation state
+            if ("BLUE".equals(portal.getType())) {
+                portal.render(batch, bluePortalAnim);
+            } else {
+                portal.render(batch, orangePortalAnim);
+            }
+        }
+
+        // Get Mouse aim
+        Vector3 mousePos3 = camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
+        Vector2 mousePos = new Vector2(mousePos3.x, mousePos3.y);
+
+        // Render Player Sprites
+        player.render(batch, mousePos);
+
+        batch.end();
+
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        for (Portal portal : activePortals)
-            portal.render(shapeRenderer);
+        // Debug render for portal bounds
+        // for (Portal portal : activePortals) portal.render(shapeRenderer);
+
         for (Projectile p : activeProjectiles)
             p.render(shapeRenderer);
-        player.render(shapeRenderer);
+        // player.render(shapeRenderer); // Debug block disabled
 
         shapeRenderer.end();
     }
@@ -393,9 +427,18 @@ public class PlayingState implements GameState, LevelListener {
     @Override
     public void dispose() {
         shapeRenderer.dispose();
+        if (batch != null)
+            batch.dispose();
+        if (bluePortalTex != null)
+            bluePortalTex.dispose();
+        if (orangePortalTex != null)
+            orangePortalTex.dispose();
+
         if (map != null)
             map.dispose();
         if (mapRenderer != null)
             mapRenderer.dispose();
+        if (player != null)
+            player.dispose();
     }
 }

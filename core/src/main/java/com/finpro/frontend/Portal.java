@@ -51,6 +51,59 @@ public class Portal {
         return normal;
     }
 
+    private float stateTime;
+
+    public void update(float delta) {
+        if (active) {
+            stateTime += delta;
+        }
+    }
+
+    public void render(com.badlogic.gdx.graphics.g2d.SpriteBatch batch,
+            com.badlogic.gdx.graphics.g2d.Animation<com.badlogic.gdx.graphics.g2d.TextureRegion> animation) {
+        if (!active)
+            return;
+
+        com.badlogic.gdx.graphics.g2d.TextureRegion currentFrame = animation.getKeyFrame(stateTime, true);
+
+        // Determine rotation and size
+        float rotation = 0;
+        float drawX = position.x;
+        float drawY = position.y;
+        float drawW = currentFrame.getRegionWidth(); // Default size from sprite
+        // Logic size
+        float logicW = (orientation == Orientation.HORIZONTAL) ? bounds.height : bounds.width;
+        float logicH = (orientation == Orientation.HORIZONTAL) ? bounds.width : bounds.height;
+
+        float drawWidth = currentFrame.getRegionWidth();
+        float drawHeight = currentFrame.getRegionHeight();
+
+        // Calculate center of the logical bounds
+        float cx = position.x + bounds.width / 2f;
+        float cy = position.y + bounds.height / 2f;
+
+        if (orientation == Orientation.HORIZONTAL) {
+            // Rotate 90 degrees.
+            // We need to draw centered at (cx, cy).
+            // Batch draw takes (x, y) as the bottom-left corner of the sprite *before*
+            // rotation.
+            // Origin should be center of sprite.
+
+            batch.draw(currentFrame,
+                    cx - drawWidth / 2f, cy - drawHeight / 2f, // X, Y (bottom-left relative to center)
+                    drawWidth / 2f, drawHeight / 2f, // Origin (center of sprite)
+                    drawWidth, drawHeight, // Width, Height
+                    1, 1, // Scale
+                    90f); // Rotation
+        } else {
+            // Vertical - No rotation
+            batch.draw(currentFrame,
+                    cx - drawWidth / 2f, cy - drawHeight / 2f,
+                    drawWidth, drawHeight);
+        }
+    }
+
+    // Legacy ShapeRenderer for debug (optional, can keep or remove)
     public void render(ShapeRenderer shapeRenderer) {
         if (!active)
             return;
