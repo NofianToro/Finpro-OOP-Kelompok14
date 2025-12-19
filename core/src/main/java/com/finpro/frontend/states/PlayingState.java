@@ -35,7 +35,11 @@ import com.finpro.frontend.observers.LevelListener;
 import com.finpro.frontend.pools.PortalPool;
 import com.finpro.frontend.pools.ProjectilePool;
 import com.finpro.frontend.strategies.LinearMovementStrategy;
+
 import com.finpro.frontend.strategies.ProjectileMovementStrategy;
+import com.finpro.frontend.obstacles.Turret;
+import com.finpro.frontend.Bullet;
+import com.finpro.frontend.pools.BulletPool;
 
 import java.util.Iterator;
 
@@ -51,13 +55,16 @@ public class PlayingState implements GameState, LevelListener {
 
     private Player player;
     private Array<Wall> walls;
+    private Array<Turret> turrets;
     private LevelFactory levelFactory;
     private InputHandler inputHandler;
 
     private PortalPool portalPool;
     private ProjectilePool projectilePool;
+    private BulletPool bulletPool;
     private PortalFactory portalFactory;
     private Array<Projectile> activeProjectiles;
+    private Array<Bullet> activeBullets;
     private Array<Portal> activePortals;
     private ProjectileMovementStrategy linearStrategy;
 
@@ -96,6 +103,8 @@ public class PlayingState implements GameState, LevelListener {
             map.dispose();
         if (activeProjectiles != null)
             activeProjectiles.clear();
+        if (activeBullets != null)
+            activeBullets.clear();
         if (activePortals != null)
             activePortals.clear();
 
@@ -125,11 +134,19 @@ public class PlayingState implements GameState, LevelListener {
             portalPool = new PortalPool();
         if (projectilePool == null)
             projectilePool = new ProjectilePool();
+        if (bulletPool == null)
+            bulletPool = new BulletPool();
         if (portalFactory == null)
             portalFactory = new PortalFactory(portalPool);
 
         activeProjectiles = new Array<>();
+        activeBullets = new Array<>();
         activePortals = new Array<>();
+        turrets = levelFactory.parseTurrets(bulletPool);
+        if (turrets.size == 0) {
+            // Fallback: Spawn a test turret if none found in map
+            turrets.add(new Turret(300, 200, bulletPool));
+        }
         linearStrategy = new LinearMovementStrategy();
 
         if (batch == null)
@@ -189,9 +206,44 @@ public class PlayingState implements GameState, LevelListener {
     public void update(float delta) {
         inputHandler.handleInput(player, delta);
         player.update(delta, walls, mapWidth, mapHeight);
+
+        updateTurrets(delta);
         updateProjectiles(delta);
+        updateBullets(delta);
         updatePortals(delta);
         updateCamera();
+    }
+
+    private void updateTurrets(float delta) {
+        for (Turret turret : turrets) {
+            turret.update(delta, activeBullets);
+        }
+    }
+
+    private void updateBullets(float delta) {
+        Iterator<Bullet> iter = activeBullets.iterator();
+        while (iter.hasNext()) {
+            Bullet b = iter.next();
+            b.update(delta);
+            // Check collisions (Walls, Player?)
+            // Just Walls for now to clean up
+            for (Wall wall : walls) {
+                if (b.getBounds().overlaps(wall.getBounds())) {
+                    b.setActive(false);
+                    bulletPool.free(b);
+                    iter.remove();
+                    break;
+                }
+            }
+            if (activeBullets.contains(b, true)) { // If not removed
+                if (b.getBounds().x < 0 || b.getBounds().x > mapWidth ||
+                        b.getBounds().y < 0 || b.getBounds().y > mapHeight) {
+                    b.setActive(false);
+                    bulletPool.free(b);
+                    iter.remove();
+                }
+            }
+        }
     }
 
     private void updateCamera() {
@@ -214,7 +266,7 @@ public class PlayingState implements GameState, LevelListener {
             for (Wall wall : walls) {
                 if (p.getBounds().overlaps(wall.getBounds())) {
 
-                    if (wall.isBlackWall()) {
+                    if (wall.isBlackWall() || wall.isExit()) {
                         p.setActive(false);
                         projectilePool.free(p);
                         iter.remove();
@@ -428,6 +480,14 @@ public class PlayingState implements GameState, LevelListener {
 
         for (Projectile p : activeProjectiles)
             p.render(shapeRenderer);
+
+        for (Bullet b : activeBullets)
+            b.render(shapeRenderer);
+
+        for (Turret turret : turrets) {
+            turret.render(shapeRenderer);
+        }
+
         // player.render(shapeRenderer); // Debug block disabled
 
         shapeRenderer.end();

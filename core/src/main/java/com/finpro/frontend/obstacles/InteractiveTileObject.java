@@ -29,12 +29,12 @@ public abstract class InteractiveTileObject {
 
         bdef.type = BodyDef.BodyType.StaticBody;
         bdef.position.set((bounds.getX() + bounds.getWidth() / 2) / Constants.PPM,
-            (bounds.getY() + bounds.getHeight() / 2) / Constants.PPM);
+                (bounds.getY() + bounds.getHeight() / 2) / Constants.PPM);
 
         body = world.createBody(bdef);
 
         shape.setAsBox(bounds.getWidth() / 2 / Constants.PPM,
-            bounds.getHeight() / 2 / Constants.PPM);
+                bounds.getHeight() / 2 / Constants.PPM);
         fdef.shape = shape;
 
         // UBAH BARIS INI (Simpan hasilnya ke variabel fixture)

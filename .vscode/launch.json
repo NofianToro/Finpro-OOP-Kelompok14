@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Run Game (Lwjgl3)",
+            "request": "launch",
+            "mainClass": "com.finpro.frontend.lwjgl3.Lwjgl3Launcher",
+            "projectName": "Finpro-OOP-Kelompok14.lwjgl3",
+            "cwd": "${workspaceFolder}",
+            "args": "",
+            "env": {},
+            "preLaunchTask": "build"
+        }
+    ]
+}

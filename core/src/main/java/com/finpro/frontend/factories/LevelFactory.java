@@ -8,6 +8,8 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.finpro.frontend.obstacles.Wall;
+import com.finpro.frontend.obstacles.Turret;
+import com.finpro.frontend.pools.BulletPool;
 
 public class LevelFactory {
     private TiledMap map;
@@ -19,8 +21,8 @@ public class LevelFactory {
     public Array<Wall> parseWalls() {
         Array<Wall> walls = new Array<>();
 
-        //Parse Common Wall
-        String[] normalLayers = {"Wall", "Ground"};
+        // Parse Common Wall
+        String[] normalLayers = { "Wall", "Ground" };
         for (String layerName : normalLayers) {
             MapLayer layer = map.getLayers().get(layerName);
             if (layer != null) {
@@ -33,7 +35,7 @@ public class LevelFactory {
             }
         }
 
-        //Parse Exit
+        // Parse Exit
         MapLayer exitLayer = map.getLayers().get("Exit");
         if (exitLayer != null) {
             for (MapObject object : exitLayer.getObjects()) {
@@ -48,7 +50,7 @@ public class LevelFactory {
             System.out.println("WARNING: Layer 'Exit' tidak ditemukan di Map!");
         }
 
-        //Parse BlackwWall (Cannot Spawn Portal)
+        // Parse BlackwWall (Cannot Spawn Portal)
         MapLayer blackWallLayer = map.getLayers().get("BlackWall");
         if (blackWallLayer != null) {
             for (MapObject object : blackWallLayer.getObjects()) {
@@ -75,5 +77,19 @@ public class LevelFactory {
             }
         }
         return new Vector2(100, 200);
+    }
+
+    public Array<Turret> parseTurrets(BulletPool pool) {
+        Array<Turret> turrets = new Array<>();
+        MapLayer layer = map.getLayers().get("Turret"); // Assuming layer name is "Turret"
+        if (layer != null) {
+            for (MapObject object : layer.getObjects()) {
+                if (object instanceof RectangleMapObject) {
+                    Rectangle rect = ((RectangleMapObject) object).getRectangle();
+                    turrets.add(new Turret(rect.x, rect.y, pool));
+                }
+            }
+        }
+        return turrets;
     }
 }
