@@ -1,0 +1,27 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Backend Server (Spring Boot)",
+            "request": "launch",
+            "mainClass": "com.finpro.backend.BackendApplication",
+            "projectName": "Finpro-OOP-Kelompok14-server",
+            "cwd": "${workspaceFolder}/server",
+            "env": {
+                "SPRING_PROFILES_ACTIVE": "dev"
+            }
+        },
+        {
+            "type": "java",
+            "name": "Game (Desktop)",
+            "request": "launch",
+            "mainClass": "com.finpro.frontend.lwjgl3.Lwjgl3Launcher",
+            "projectName": "Finpro-OOP-Kelompok14-lwjgl3",
+            "cwd": "${workspaceFolder}/assets",
+            "classpath": [],
+            "shortenCommandLine": "none",
+            "vmArgs": "-XstartOnFirstThread"
+        }
+    ]
+}
