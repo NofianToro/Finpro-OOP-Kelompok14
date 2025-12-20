@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="45" tilewidth="16" tileheight="16" infinite="0" nextlayerid="15" nextobjectid="36">
+ <tileset firstgid="1" name="Cyberpunk" tilewidth="16" tileheight="16" tilecount="256" columns="16">
+  <image source="Cyberpunk.png" width="256" height="256"/>
+ </tileset>
+ <tileset firstgid="257" name="Dungeon Tile Set" tilewidth="16" tileheight="16" tilecount="270" columns="15">
+  <image source="Dungeon Tile Set.png" width="240" height="288"/>
+ </tileset>
+ <tileset firstgid="527" name="level_tileset" tilewidth="16" tileheight="16" tilecount="324" columns="18">
+  <image source="level_tileset.png" width="300" height="300"/>
+ </tileset>
+ <tileset firstgid="851" name="mainlevbuild" tilewidth="16" tileheight="16" tilecount="2560" columns="64">
+  <image source="mainlevbuild.png" width="1024" height="640"/>
+ </tileset>
+ <imagelayer id="12" name="Bg1">
+  <image source="background/Night/1.png" width="1280" height="720"/>
+ </imagelayer>
+ <imagelayer id="13" name="Bg2" offsetx="809.333" offsety="121.333">
+  <image source="background/Night/2.png" width="576" height="324"/>
+ </imagelayer>
+ <layer id="11" name="Background" width="80" height="45">
+  <data encoding="base64" compression="zlib">
+   eJzt0jEKw0AQxdDBLpL739WpU7lIZ8wSWaBtHlsO+sc289lmjrzla59573lXup9dup9dup9dup9dup9dup9dut9qz3f13/5+Pd/Vf/trf+3vOba/9tf+vLa/9tf+vLa/9tf+vLa/9vdkV99N7+Xfrr6b3oNdeg926X526X526X526X526X526X526X526X526X526X526X526X526X526X526X526X526X526X52v/6TC2E=
+  </data>
+ </layer>
+ <objectgroup id="5" name="Ground">
+  <object id="1" x="0" y="642" width="1281.82" height="73.1515"/>
+ </objectgroup>
+ <layer id="9" name="Tile Layer 1" width="80" height="45">
+  <data encoding="base64" compression="zlib">
+   eJzt2MENwjAQRNGxTQNAAyENAP3fuEML0AJUgCLEBTnE8VhmTeZLewXrEQV5OwfsCk3vkF1X+PNqFTu3/NKTH5f8uOTHJT8uK357Bxw+5ii/5E4jYz0rfq0mPy75ccmPS35c8uOy6Ld2wObLbA39Thb9ps5k6TmXX1pnD1z8/LPK79XVA7eIX+zemTul7qsW/e4eeET8LGbRLwRgFep/b061/cZ2FyljsV/45bzvrfpNvZNL7wX/za928uOSH5f8uOTHJT8u+XG14De105szpfd/LfhZ3PO8kx+X/LjkxyU/LvlxyY9Lflzy42L8St4LljbDPajkc7G06eUnP/k1O8P/2BMM0OED
+  </data>
+ </layer>
+ <objectgroup color="#aa0000" id="10" name="Wall">
+  <object id="18" x="0.666667" y="1.33333" width="319.333" height="302.667"/>
+  <object id="20" x="592" y="223.333" width="145.333" height="144.667"/>
+  <object id="21" x="416.667" y="480" width="318.667" height="158.667"/>
+  <object id="25" x="543.333" y="1.33333" width="96.6667" height="110"/>
+ </objectgroup>
+ <objectgroup id="14" name="BlackWall">
+  <object id="33" x="544.167" y="112.917" width="96" height="14.75"/>
+  <object id="35" x="1040.09" y="320.091" width="239.898" height="320"/>
+ </objectgroup>
+ <objectgroup id="7" name="Spawn">
+  <object id="5" x="32" y="577.333" width="29.3333" height="62.6667"/>
+ </objectgroup>
+ <objectgroup id="8" name="Exit">
+  <object id="6" x="1184" y="257.333" width="29.3333" height="61.3333"/>
+ </objectgroup>
+</map>
