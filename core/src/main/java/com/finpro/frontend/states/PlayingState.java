@@ -492,6 +492,14 @@ public class PlayingState implements GameState, LevelListener {
 
         for (Projectile p : activeProjectiles)
             p.render(shapeRenderer);
+
+        for (Bullet b : activeBullets)
+            b.render(shapeRenderer);
+
+        for (Turret turret : turrets) {
+            turret.render(shapeRenderer);
+        }
+
         // player.render(shapeRenderer); // Debug block disabled
 
         shapeRenderer.end();
