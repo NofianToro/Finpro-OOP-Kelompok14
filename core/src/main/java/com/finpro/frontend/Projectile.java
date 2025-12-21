@@ -75,11 +75,6 @@ public class Projectile {
         // Calculate rotation
         float angle = velocity.angleDeg();
 
-        // Draw centered? Or just at position (bottom-left of bounds)
-        // Texture might be larger than 8x8.
-        // Let's assume we draw it at matching size or slightly scaled?
-        // Let's draw it at width/height for now, but rotated.
-
         batch.draw(texture,
                 position.x, position.y,
                 width / 2, height / 2, // Origin center

@@ -37,9 +37,6 @@ public abstract class InteractiveTileObject {
                 bounds.getHeight() / 2 / Constants.PPM);
         fdef.shape = shape;
 
-        // UBAH BARIS INI (Simpan hasilnya ke variabel fixture)
-        // Dari: body.createFixture(fdef);
-        // Menjadi:
         this.fixture = body.createFixture(fdef);
     }
 }

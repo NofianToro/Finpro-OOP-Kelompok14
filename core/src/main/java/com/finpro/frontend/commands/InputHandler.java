@@ -52,8 +52,6 @@ public class InputHandler {
         }
 
         // 3. Handle Mouse/Shoot (Generic Commands)
-        // For now, we manually execute shoot command if registered, or we could add a
-        // list of 'AlwaysExecuteCommands'
         if (shootCommand != null) {
             shootCommand.execute(player, delta);
         }

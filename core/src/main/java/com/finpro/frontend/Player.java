@@ -36,13 +36,6 @@ public class Player {
     private float stateTime;
     private boolean facingRight = true;
 
-    // Hand logic
-    // 1-5: Left hand from bottom to top?
-    // User said: "Hand ... file1,2,3,4,5 (posisi tangan kiri dari bawah hingga ke
-    // atas)"
-    // And "memegang gun (/Gun)"
-    // We will assume 1-10 covers a range.
-
     public Player(float startX, float startY) {
         this.position = new Vector2(startX, startY);
         this.velocity = new Vector2(0, 0);
@@ -223,10 +216,6 @@ public class Player {
             currentBodyFrame = idleAnim.getKeyFrame(stateTime, true);
         }
 
-        // Draw Body
-        // Body texture is 48x48. Logic WIDTH is 50. Scale slightly?
-        // Let's just draw 50x50.
-        // Flip if needed
         if (currentBodyFrame.isFlipX() != flipX) {
             currentBodyFrame.flip(true, false);
         }
@@ -235,9 +224,7 @@ public class Player {
 
         // CALCULATE ARM ANGLE
         float centerX = position.x + WIDTH / 2f;
-        float centerY = position.y + HEIGHT / 2f; // Shoulder height?
-        // Shoulder is usually slightly higher than center for a 48px sprite.
-        // Let's assume center for now.
+        float centerY = position.y + HEIGHT / 2f;
 
         float angleDeg = MathUtils.atan2(mousePos.y - centerY, mousePos.x - centerX) * MathUtils.radDeg;
 
