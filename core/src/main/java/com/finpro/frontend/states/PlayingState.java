@@ -490,8 +490,8 @@ public class PlayingState implements GameState, LevelListener {
         // Debug render for portal bounds
         // for (Portal portal : activePortals) portal.render(shapeRenderer);
 
-        for (Projectile p : activeProjectiles)
-            p.render(shapeRenderer);
+        // for (Projectile p : activeProjectiles)
+        // p.render(shapeRenderer);
 
         for (Bullet b : activeBullets)
             b.render(shapeRenderer);

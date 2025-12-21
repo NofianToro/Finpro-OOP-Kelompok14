@@ -115,6 +115,12 @@ public class Player {
             isOnGround = true;
             velocity.y = 0;
         }
+        // Top Boundary
+        if (position.y > mapHeight - HEIGHT) {
+            position.y = mapHeight - HEIGHT;
+            if (velocity.y > 0)
+                velocity.y = 0;
+        }
 
         updateCollider();
 
@@ -287,32 +293,53 @@ public class Player {
         // Gun Rendering
         // Calculate visual angle from index (discrete steps)
         // 0 -> -90, 4 -> 90.
-        float visualAngle = -90f + (handIndex / 4f) * 180f;
+        float visualAngle = -90f + (handIndex / 4f) * 180f; // This is the semantic angle (Up/Down)
 
         // Arm Length
         // User said "Gun not connected".
         // Reduce arm length to bring it closer to hand tip.
         float armLength = 14f;
 
-        // Angle corrections?
-        // If visualAngle is -90 (Down), cos is 0, sin is -1.
-        // Offset Y = -14. Gun is below.
+        // 1. Calculate Standard Position (Right Facing)
+        // Manual offset for "tucked" look (Right facing) included in calc
+        // CenterX - 5 + offset. Offset = Cos * armLength - 7 (pivot).
+        // Wait, current code uses: centerX + (-5) + offset - 7.
+        // Let's use the explicit logic I designed.
 
-        float gunOffsetX = MathUtils.cosDeg(visualAngle) * armLength;
-        float gunOffsetY = MathUtils.sinDeg(visualAngle) * armLength;
+        float baseGunX = centerX - 5 + (MathUtils.cosDeg(visualAngle) * armLength) - 7;
+        float baseGunY = centerY + (MathUtils.sinDeg(visualAngle) * armLength) - 5;
+
+        float gunX, gunY;
+        float rotation;
 
         if (flipX) {
-            gunOffsetX = -gunOffsetX;
+            // Mirror X relative to CenterX
+            // gunX = CenterX + (CenterX - (baseGunX + Width)) ? No.
+            // gunX = CenterX - (baseGunX - CenterX) - Width.
+            // gunX = 2*CenterX - baseGunX - 14.
+            gunX = (2 * centerX - baseGunX) - 14;
+            gunY = baseGunY;
+
+            // Fix vertical swap: Use 180 - angle, not angle + 180.
+            rotation = 180f - visualAngle;
+        } else {
+            gunX = baseGunX;
+            gunY = baseGunY;
+            rotation = visualAngle;
         }
 
-        // Adjust Gun Center
-        // Gun 14x10. Center is 7, 5.
+        // Draw Gun with Flip Logic
+        // ScaleY = -1 if flipX to keep "Top" up.
 
-        // Fine tune position
-        float gunX = centerX + (flipX ? 5 : -5) + gunOffsetX - 7;
-        float gunY = centerY + gunOffsetY - 5;
-
-        batch.draw(gunTex, gunX, gunY, 14, 10);
+        batch.draw(gunTex,
+                gunX, gunY,
+                7, 5, // origin (center)
+                14, 10, // width height
+                1, flipX ? -1 : 1, // scaleX, scaleY (Flip Y if facing left)
+                rotation,
+                0, 0,
+                gunTex.getWidth(), gunTex.getHeight(),
+                false, false);
 
     }
 
