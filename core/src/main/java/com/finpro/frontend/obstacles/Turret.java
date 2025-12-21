@@ -35,7 +35,7 @@ public class Turret {
         Bullet b = bulletPool.obtain();
 
         // Offset Y to match player height
-        float spawnY = position.y + 25f;
+        float spawnY = position.y + 10f; // Lowered turret bullet
         float spawnX;
 
         float speed = 400f;
@@ -49,7 +49,7 @@ public class Turret {
             velX = -speed;
         }
 
-        b.init(spawnX, spawnY - 4, velX, 0);
+        b.init(spawnX, spawnY, velX, 0);
         activeBullets.add(b);
     }
 

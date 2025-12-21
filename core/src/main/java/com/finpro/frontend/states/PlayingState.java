@@ -83,6 +83,7 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
             "map/level_4.tmx", "map/level_5.tmx" };
     private int currentLevelIndex = 0;
 
+    private Vector2 initialSpawnPos; // Store spawn position
     private boolean isLevelTransitioning = false;
     private GlyphLayout layout;
 
@@ -153,6 +154,7 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         walls = levelFactory.parseWalls();
 
         Vector2 spawnPos = levelFactory.getPlayerSpawnPoint(map);
+        initialSpawnPos = new Vector2(spawnPos); // Save for respawn
         player = new Player(spawnPos.x, spawnPos.y);
         player.addListener(this);
 
@@ -283,6 +285,17 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         while (iter.hasNext()) {
             Bullet b = iter.next();
             b.update(delta);
+            // Check collision with Player
+            if (b.getBounds().overlaps(player.getBounds())) {
+                player.setPosition(initialSpawnPos.x, initialSpawnPos.y);
+                resetPortals();
+                // Optional: Add death sound or effect here
+                b.setActive(false);
+                bulletPool.free(b);
+                iter.remove();
+                continue;
+            }
+
             for (Wall wall : walls) {
                 if (b.getBounds().overlaps(wall.getBounds())) {
                     b.setActive(false);
@@ -400,6 +413,7 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         Vector3 world = camera.unproject(new Vector3(screenX, screenY, 0));
 
         float pX = player.getBounds().x + player.getBounds().width / 2f;
+
         float pY = player.getBounds().y + player.getBounds().height / 2f;
 
         Vector2 dir = new Vector2(world.x - pX, world.y - pY).nor();
@@ -531,9 +545,6 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        for (Turret turret : turrets) {
-            turret.render(shapeRenderer);
-        }
         shapeRenderer.end();
 
         if (isLevelTransitioning) {
