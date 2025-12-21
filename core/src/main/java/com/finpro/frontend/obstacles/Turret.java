@@ -13,90 +13,45 @@ public class Turret {
     private float width = 32f;
     private float height = 32f;
 
-    private float angle; // Current angle in degrees
-    private float stateTime; // kept but unused to satisfy lint for now or potential future animation
-
-    private enum State {
-        WAITING_RIGHT, // Angle 0
-        ROTATING_LEFT, // 0 -> 180
-        WAITING_LEFT, // Angle 180
-        ROTATING_RIGHT // 180 -> 0
-    }
-
-    private State currentState;
     private float timer;
-    private final float WAIT_TIME = 1.0f; // Time to wait before shooting
-    private final float ROTATION_SPEED = 90f; // Degrees per second
+    private final float WAIT_TIME = 2.0f; // Slower fire rate
+    private float fixedAngle = 0f; // Default to Right. Friend can change this to 180 for Left.
 
     private BulletPool bulletPool;
 
     public Turret(float x, float y, BulletPool pool) {
         this.position = new Vector2(x, y);
         this.bulletPool = pool;
-        this.angle = 0f;
-        this.currentState = State.WAITING_RIGHT;
         this.timer = 0f;
     }
 
     public void update(float delta, Array<Bullet> activeBullets) {
-        switch (currentState) {
-            case WAITING_RIGHT:
-                timer += delta;
-                if (timer >= WAIT_TIME) {
-                    shoot(activeBullets, 0); // Shoot Right
-                    timer = 0;
-                    currentState = State.ROTATING_LEFT;
-                }
-                break;
-
-            case ROTATING_LEFT:
-                angle += ROTATION_SPEED * delta;
-                if (angle >= 180f) {
-                    angle = 180f;
-                    currentState = State.WAITING_LEFT;
-                    timer = 0;
-                }
-                break;
-
-            case WAITING_LEFT:
-                timer += delta;
-                if (timer >= WAIT_TIME) {
-                    shoot(activeBullets, 180); // Shoot Left
-                    timer = 0;
-                    currentState = State.ROTATING_RIGHT;
-                }
-                break;
-
-            case ROTATING_RIGHT:
-                angle -= ROTATION_SPEED * delta;
-                if (angle <= 0f) {
-                    angle = 0f;
-                    currentState = State.WAITING_RIGHT;
-                    timer = 0;
-                }
-                break;
+        timer += delta;
+        if (timer >= WAIT_TIME) {
+            shoot(activeBullets);
+            timer = 0;
         }
     }
 
-    private void shoot(Array<Bullet> activeBullets, float shootAngle) {
+    private void shoot(Array<Bullet> activeBullets) {
         Bullet b = bulletPool.obtain();
 
-        // Offset Y to match player height (approx 25px up from turret center/base)
+        // Offset Y to match player height
         float spawnY = position.y + 25f;
         float spawnX;
 
         float speed = 400f;
         float velX = 0;
 
-        if (shootAngle == 0) {
-            spawnX = position.x + width + 5; // Slight offset right
+        if (fixedAngle == 0) {
+            spawnX = position.x + width + 5;
             velX = speed;
         } else { // 180
-            spawnX = position.x - 5; // Slight offset left
+            spawnX = position.x - 5;
             velX = -speed;
         }
 
-        b.init(spawnX, spawnY - 4, velX, 0); // bullet height is 8, so -4 to center
+        b.init(spawnX, spawnY - 4, velX, 0);
         activeBullets.add(b);
     }
 
@@ -112,8 +67,8 @@ public class Turret {
         shapeRenderer.setColor(Color.DARK_GRAY);
         shapeRenderer.rectLine(
                 barrelX, barrelY,
-                barrelX + MathUtils.cosDeg(angle) * barrelLen,
-                barrelY + MathUtils.sinDeg(angle) * barrelLen,
+                barrelX + MathUtils.cosDeg(fixedAngle) * barrelLen,
+                barrelY + MathUtils.sinDeg(fixedAngle) * barrelLen,
                 6f);
     }
 
