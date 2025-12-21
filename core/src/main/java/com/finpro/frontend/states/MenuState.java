@@ -113,7 +113,16 @@ public class MenuState implements GameState {
         table.add(titleLabel).padBottom(20).row();
         table.add(promptLabel).padBottom(10).row();
         table.add(nameField).width(200).height(40).padBottom(20).row();
-        table.add(startButton).width(200).height(50);
+        table.add(startButton).width(200).height(50).row();
+
+        TextButton leaderboardBtn = new TextButton("LEADERBOARD", skin);
+        leaderboardBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                gsm.set(new LeaderboardState(gsm));
+            }
+        });
+        table.add(leaderboardBtn).width(200).height(50).padTop(10);
     }
 
     @Override

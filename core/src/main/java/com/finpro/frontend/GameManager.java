@@ -51,9 +51,9 @@ public class GameManager {
         this.gameActive = false;
     }
 
-//    ===
-//    Backend Service
-//    ===
+    // ===
+    // Backend Service
+    // ===
     public void registerPlayer(String username) {
         backendService.createPlayer(username, new BackendService.RequestCallback() {
             @Override
@@ -72,5 +72,18 @@ public class GameManager {
                 Gdx.app.error("GameManager", "Register Error: " + error);
             }
         });
+    }
+
+    public BackendService getBackendService() {
+        return backendService;
+    }
+
+    public void submitScore(long l1, long l2, long l3, long l4, long l5, BackendService.RequestCallback callback) {
+        if (currentPlayerId == null) {
+            Gdx.app.error("GameManager", "Cannot submit score: No Player ID");
+            callback.onError("No Player ID");
+            return;
+        }
+        backendService.submitScore(currentPlayerId, l1, l2, l3, l4, l5, callback);
     }
 }

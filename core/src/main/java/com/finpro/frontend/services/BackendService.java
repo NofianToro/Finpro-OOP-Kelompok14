@@ -27,10 +27,10 @@ public class BackendService {
         sendRequest(request, callback);
     }
 
-    public void submitScore(String playerId, int scoreValue, int coins, int distance, RequestCallback callback) {
+    public void submitScore(String playerId, long l1, long l2, long l3, long l4, long l5, RequestCallback callback) {
         String json = String.format(
-                "{\"playerId\":\"%s\",\"value\":%d,\"coinsCollected\":%d,\"distanceTravelled\":%d}",
-                playerId, scoreValue, coins, distance);
+                "{\"playerId\":\"%s\",\"level1Time\":%d,\"level2Time\":%d,\"level3Time\":%d,\"level4Time\":%d,\"level5Time\":%d}",
+                playerId, l1, l2, l3, l4, l5);
 
         HttpRequestBuilder requestBuilder = new HttpRequestBuilder();
         Net.HttpRequest request = requestBuilder.newRequest()
@@ -38,6 +38,33 @@ public class BackendService {
                 .url(BASE_URL + "/scores")
                 .header("Content-Type", "application/json")
                 .content(json)
+                .build();
+
+        sendRequest(request, callback);
+    }
+
+    public void getLeaderboard(int limit, RequestCallback callback) {
+        String url = BASE_URL + "/scores/leaderboard"; // Backend endpoint for overall
+        // Note: Backend might default to limit 10, or we can add ?limit=XX if backend
+        // supports it.
+        // Assuming /scores/leaderboard returns the list.
+
+        HttpRequestBuilder requestBuilder = new HttpRequestBuilder();
+        Net.HttpRequest request = requestBuilder.newRequest()
+                .method(Net.HttpMethods.GET)
+                .url(url)
+                .build();
+
+        sendRequest(request, callback);
+    }
+
+    public void getLeaderboardByLevel(int level, int limit, RequestCallback callback) {
+        String url = BASE_URL + "/scores/leaderboard/level/" + level;
+
+        HttpRequestBuilder requestBuilder = new HttpRequestBuilder();
+        Net.HttpRequest request = requestBuilder.newRequest()
+                .method(Net.HttpMethods.GET)
+                .url(url)
                 .build();
 
         sendRequest(request, callback);

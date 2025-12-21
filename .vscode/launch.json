@@ -3,6 +3,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Lwjgl3Launcher",
+            "request": "launch",
+            "mainClass": "com.finpro.frontend.lwjgl3.Lwjgl3Launcher",
+            "projectName": "lwjgl3"
+        },
+        {
+            "type": "java",
             "name": "Backend Server (Spring Boot)",
             "request": "launch",
             "mainClass": "com.finpro.backend.BackendApplication",

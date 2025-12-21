@@ -1,16 +1,14 @@
 package com.finpro.frontend.states;
 
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Animation;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.math.Vector2;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.MapProperties;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -22,6 +20,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.finpro.frontend.Bullet;
 import com.finpro.frontend.GameManager;
 import com.finpro.frontend.Player;
 import com.finpro.frontend.Portal;
@@ -30,20 +29,22 @@ import com.finpro.frontend.commands.InputHandler;
 import com.finpro.frontend.commands.ShootCommand;
 import com.finpro.frontend.factories.LevelFactory;
 import com.finpro.frontend.factories.PortalFactory;
+import com.finpro.frontend.obstacles.Turret;
 import com.finpro.frontend.obstacles.Wall;
 import com.finpro.frontend.observers.LevelListener;
+import com.finpro.frontend.observers.TimerObserver;
+import com.finpro.frontend.pools.BulletPool;
 import com.finpro.frontend.pools.PortalPool;
 import com.finpro.frontend.pools.ProjectilePool;
 import com.finpro.frontend.strategies.LinearMovementStrategy;
-
 import com.finpro.frontend.strategies.ProjectileMovementStrategy;
-import com.finpro.frontend.obstacles.Turret;
-import com.finpro.frontend.Bullet;
-import com.finpro.frontend.pools.BulletPool;
+import com.finpro.frontend.utils.GameTimer;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
-public class PlayingState implements GameState, LevelListener {
+public class PlayingState implements GameState, LevelListener, TimerObserver {
 
     private final GameStateManager gsm;
     private final ShapeRenderer shapeRenderer;
@@ -58,6 +59,13 @@ public class PlayingState implements GameState, LevelListener {
     private Array<Turret> turrets;
     private LevelFactory levelFactory;
     private InputHandler inputHandler;
+
+    // Timer fields
+    private GameTimer gameTimer;
+    private String timerTextLevel = ""; // Updated by observer
+    private String timerTextTotal = ""; // Updated by observer
+    private Map<Integer, Long> levelTimes;
+    private BitmapFont timerFont;
 
     private PortalPool portalPool;
     private ProjectilePool projectilePool;
@@ -77,7 +85,7 @@ public class PlayingState implements GameState, LevelListener {
     private final int screenHeight;
 
     private final String[] levels = { "map/intro.tmx", "map/level_1.tmx", "map/level_2.tmx", "map/level_3.tmx",
-            "map/level_4.tmx" };
+            "map/level_4.tmx", "map/level_5.tmx" };
     private int currentLevelIndex = 0;
 
     public PlayingState(GameStateManager gsm) {
@@ -90,12 +98,23 @@ public class PlayingState implements GameState, LevelListener {
         camera = new OrthographicCamera();
         camera.setToOrtho(false, screenWidth, screenHeight);
 
-        loadLevel(currentLevelIndex);
-
         inputHandler = new InputHandler();
         inputHandler.setShootCommand(new ShootCommand(this));
 
         GameManager.getInstance().startGame();
+
+        // Initialize Timer
+        timerFont = new BitmapFont();
+        timerFont.setColor(Color.WHITE);
+        timerFont.getData().setScale(1.5f);
+
+        gameTimer = new GameTimer();
+        gameTimer.addObserver(this);
+        levelTimes = new HashMap<>();
+
+        loadLevel(currentLevelIndex);
+
+        gameTimer.start();
     }
 
     private void loadLevel(int levelIndex) {
@@ -108,10 +127,15 @@ public class PlayingState implements GameState, LevelListener {
         if (activePortals != null)
             activePortals.clear();
 
+        if (gameTimer != null)
+            gameTimer.resetLevelTimer();
+
         try {
             map = new TmxMapLoader().load(levels[levelIndex]);
         } catch (Exception e) {
-            Gdx.app.exit();
+            Gdx.app.error("PlayingState", "Failed to load map: " + levels[levelIndex]);
+            if (levelIndex == 0)
+                Gdx.app.exit(); // Fatal if intro fails
             return;
         }
 
@@ -182,12 +206,26 @@ public class PlayingState implements GameState, LevelListener {
 
     @Override
     public void onLevelFinished() {
+        // Record level time using GameTimer getter
+        long duration = gameTimer.getLevelDuration();
+        levelTimes.put(currentLevelIndex, duration);
+        Gdx.app.log("PlayingState", "Level " + currentLevelIndex + " finished in " + duration + "ms");
+
         currentLevelIndex++;
         if (currentLevelIndex < levels.length) {
             loadLevel(currentLevelIndex);
         } else {
-            currentLevelIndex = 0;
-            loadLevel(currentLevelIndex);
+            // Calculate total time (sum of levels 1-5, skipping intro at 0 if desired)
+            long totalTime = 0;
+
+            for (int i = 1; i <= 5; i++) {
+                totalTime += levelTimes.getOrDefault(i, 0L);
+            }
+
+            Gdx.app.log("PlayingState", "Game Finished! Total Time: " + totalTime);
+            gameTimer.stop();
+            gameTimer.removeObserver(this);
+            gsm.set(new EndScreenState(gsm, levelTimes, totalTime));
         }
     }
 
@@ -202,8 +240,10 @@ public class PlayingState implements GameState, LevelListener {
         mapHeight = mapH * tileH;
     }
 
-    @Override
     public void update(float delta) {
+        if (gameTimer != null)
+            gameTimer.update(); // Tick the timer subject
+
         inputHandler.handleInput(player, delta);
         player.update(delta, walls, mapWidth, mapHeight);
 
@@ -468,7 +508,6 @@ public class PlayingState implements GameState, LevelListener {
         Vector2 mousePos = new Vector2(mousePos3.x, mousePos3.y);
 
         // Render Player Sprites
-        // Render Player Sprites
         player.render(batch, mousePos);
 
         // Render Projectiles
@@ -476,11 +515,12 @@ public class PlayingState implements GameState, LevelListener {
             String type = p.getType();
             // Default to blue if null, or handle types
             if ("ORANGE".equals(type)) {
-                p.render(batch, bulletOrangeTex);
-            } else {
+
                 p.render(batch, bulletBlueTex);
             }
         }
+
+        renderTimerHUD(batch);
 
         batch.end();
 
@@ -505,8 +545,31 @@ public class PlayingState implements GameState, LevelListener {
         shapeRenderer.end();
     }
 
+    private void renderTimerHUD(SpriteBatch batch) {
+        if (timerFont != null) {
+            timerFont.draw(batch, timerTextLevel, 10, screenHeight - 10);
+            timerFont.draw(batch, timerTextTotal, 10, screenHeight - 35);
+        }
+    }
+
+    private String formatTime(long millis) {
+        long minutes = (millis / 1000) / 60;
+        long seconds = (millis / 1000) % 60;
+        long ms = millis % 1000;
+        return String.format("%02d:%02d.%03d", minutes, seconds, ms);
+    }
+
+    @Override
+    public void onTick(long levelTime, long totalTime) {
+        // Called by GameTimer
+        timerTextLevel = "Level: " + formatTime(levelTime);
+        timerTextTotal = "Total: " + formatTime(totalTime);
+    }
+
     @Override
     public void dispose() {
+        if (timerFont != null)
+            timerFont.dispose();
         shapeRenderer.dispose();
         if (batch != null)
             batch.dispose();
