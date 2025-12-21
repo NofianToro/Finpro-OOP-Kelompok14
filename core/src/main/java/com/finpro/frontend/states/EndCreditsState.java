@@ -12,19 +12,20 @@ public class EndCreditsState implements GameState {
     private BitmapFont font;
     private float scrollY;
     private final String[] credits = {
-        "Thank you for playing",
-        "ESCAPE FROM I-CELL",
-        "",
-        "Created by:",
-        "Fauzan",
-        "Nofi",
-        "Toro",
-        "",
-        "Asset Credits:",
-        "Pixel Adventure (itch.io)",
-        "LibGDX Team",
-        "",
-        "Press ESC to Skip"
+            "Thank you for playing",
+            "ESCAPE FROM I-CELL",
+            "",
+            "Created by:",
+            "Fauzan Arfa Nofiantoro",
+            "Abyan Ammar Zaki",
+            "Valiant Joshua",
+            "Sabbia Meliandri Putri Delarosya",
+            "",
+            "Asset Credits:",
+            "Foozle (itch.io)",
+            "LibGDX Team",
+            "",
+            "Press ESC to Skip"
     };
 
     public EndCreditsState(GameStateManager gsm) {
