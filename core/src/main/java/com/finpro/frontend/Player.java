@@ -228,13 +228,6 @@ public class Player {
 
         float angleDeg = MathUtils.atan2(mousePos.y - centerY, mousePos.x - centerX) * MathUtils.radDeg;
 
-        // Normalize angle for Hand Index
-        // Hand 1 (index 0) = Bottom?
-        // Hand 1 (0) -> Hand 5 (4) -> Hand 10 (9)
-        // User said "bawah hingga ke atas".
-        // Let's assume range is -90 (Down) to 90 (Up).
-        // If facing Left, the angle is 180 to 90 (Up) and -180 to -90 (Down).
-
         float relativeAngle = angleDeg;
         if (flipX) {
             // If facing left (-180 to 180), we want to map it to -90 to 90 relative to

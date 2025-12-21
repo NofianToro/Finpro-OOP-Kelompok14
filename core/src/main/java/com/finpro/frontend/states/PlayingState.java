@@ -73,6 +73,9 @@ public class PlayingState implements GameState, LevelListener {
     private Animation<TextureRegion> bluePortalAnim, orangePortalAnim;
     private SpriteBatch batch;
 
+    // Respawn Logic
+    private Vector2 currentSpawnPoint;
+
     private final int screenWidth;
     private final int screenHeight;
 
@@ -126,8 +129,8 @@ public class PlayingState implements GameState, LevelListener {
         levelFactory = new LevelFactory(map);
         walls = levelFactory.parseWalls();
 
-        Vector2 spawnPos = levelFactory.getPlayerSpawnPoint(map);
-        player = new Player(spawnPos.x, spawnPos.y);
+        currentSpawnPoint = levelFactory.getPlayerSpawnPoint(map); // Store it
+        player = new Player(currentSpawnPoint.x, currentSpawnPoint.y);
         player.addListener(this);
 
         if (portalPool == null)
@@ -145,7 +148,7 @@ public class PlayingState implements GameState, LevelListener {
         turrets = levelFactory.parseTurrets(bulletPool);
         if (turrets.size == 0) {
             // Fallback: Spawn a test turret if none found in map
-            turrets.add(new Turret(300, 200, bulletPool));
+            turrets.add(new Turret(currentSpawnPoint.x + 400, currentSpawnPoint.y, bulletPool));
         }
         linearStrategy = new LinearMovementStrategy();
 
@@ -225,23 +228,36 @@ public class PlayingState implements GameState, LevelListener {
         while (iter.hasNext()) {
             Bullet b = iter.next();
             b.update(delta);
-            // Check collisions (Walls, Player?)
-            // Just Walls for now to clean up
+
+            // 1. Check Collision with Walls
+            boolean hitWall = false;
             for (Wall wall : walls) {
                 if (b.getBounds().overlaps(wall.getBounds())) {
                     b.setActive(false);
                     bulletPool.free(b);
                     iter.remove();
+                    hitWall = true;
                     break;
                 }
             }
-            if (activeBullets.contains(b, true)) { // If not removed
-                if (b.getBounds().x < 0 || b.getBounds().x > mapWidth ||
-                        b.getBounds().y < 0 || b.getBounds().y > mapHeight) {
-                    b.setActive(false);
-                    bulletPool.free(b);
-                    iter.remove();
-                }
+            if (hitWall)
+                continue; // Skip other checks if bullet is gone
+
+            // 2. Check Collision with Player
+            if (b.getBounds().overlaps(player.getBounds())) {
+                b.setActive(false);
+                bulletPool.free(b);
+                iter.remove();
+                respawnPlayer();
+                continue;
+            }
+
+            // 3. Map Boundaries
+            if (b.getBounds().x < 0 || b.getBounds().x > mapWidth ||
+                    b.getBounds().y < 0 || b.getBounds().y > mapHeight) {
+                b.setActive(false);
+                bulletPool.free(b);
+                iter.remove();
             }
         }
     }
@@ -350,6 +366,16 @@ public class PlayingState implements GameState, LevelListener {
 
         player.setPosition(targetX, targetY);
         player.setVelocity(newVelX, newVelY);
+    }
+
+    private void respawnPlayer() {
+        if (currentSpawnPoint != null) {
+            player.setPosition(currentSpawnPoint.x, currentSpawnPoint.y);
+            player.setVelocity(0, 0);
+
+            // Optional: Reset portals explicitly?
+            resetPortals();
+        }
     }
 
     public void shoot(String type, float screenX, float screenY) {
