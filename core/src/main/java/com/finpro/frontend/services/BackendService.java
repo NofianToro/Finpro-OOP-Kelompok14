@@ -5,7 +5,8 @@ import com.badlogic.gdx.Net;
 import com.badlogic.gdx.net.HttpRequestBuilder;
 
 public class BackendService {
-    private static final String BASE_URL = "http://127.0.0.1:8081/api";
+    // Changed to localhost to avoid some system-specific IPv4/IPv6 binding issues
+    private static final String BASE_URL = "http://localhost:8081/api";
 
     public interface RequestCallback {
         void onSuccess(String response);
@@ -23,6 +24,9 @@ public class BackendService {
                 .url(url)
                 // .header("Content-Type", "application/json") // Not needed for empty body
                 .build();
+
+        // Set timeout to avoid hanging (default is usually long)
+        request.setTimeOut(5000);
 
         sendRequest(request, callback);
     }
@@ -45,9 +49,6 @@ public class BackendService {
 
     public void getLeaderboard(int limit, RequestCallback callback) {
         String url = BASE_URL + "/scores/leaderboard"; // Backend endpoint for overall
-        // Note: Backend might default to limit 10, or we can add ?limit=XX if backend
-        // supports it.
-        // Assuming /scores/leaderboard returns the list.
 
         HttpRequestBuilder requestBuilder = new HttpRequestBuilder();
         Net.HttpRequest request = requestBuilder.newRequest()
@@ -80,14 +81,15 @@ public class BackendService {
                 if (statusCode >= 200 && statusCode < 300) {
                     callback.onSuccess(result);
                 } else {
-                    Gdx.app.error("BackendService", "Error Code: " + statusCode + ", Msg: " + result);
+                    Gdx.app.error("BackendService", "HTTP Error: " + statusCode + ", Msg: " + result);
                     callback.onError("Server Error: " + statusCode);
                 }
             }
 
             @Override
             public void failed(Throwable t) {
-                callback.onError(t.getMessage());
+                Gdx.app.error("BackendService", "Request Failed (Game)", t);
+                callback.onError("Connection Failed: " + t.getMessage());
             }
 
             @Override

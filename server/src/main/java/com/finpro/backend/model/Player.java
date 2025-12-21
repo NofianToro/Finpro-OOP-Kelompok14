@@ -14,16 +14,12 @@ public class Player {
     @Column(unique = true, nullable = false)
     private String username;
 
-    private int highScore;
-    private int totalCoins;
-    private int totalDistance;
+    private long bestTime; // Total time in milliseconds (lower is better)
     private LocalDateTime createdAt;
 
     public Player(String username) {
         this.username = username;
-        this.highScore = 0;
-        this.totalCoins = 0;
-        this.totalDistance = 0;
+        this.bestTime = Long.MAX_VALUE; // Initialize with max value since lower is better
         this.createdAt = LocalDateTime.now();
     }
 
@@ -35,49 +31,25 @@ public class Player {
         return playerId;
     }
 
-    public void updateHighScore(int score) {
-        if (score > this.highScore) {
-            this.highScore = score;
+    public void updateBestTime(long time) {
+        if (time < this.bestTime) {
+            this.bestTime = time;
         }
-    }
-
-    public void addCoins(int coins) {
-        this.totalCoins += coins;
-    }
-
-    public void addDistance(int distance) {
-        this.totalDistance += distance;
     }
 
     public String getUsername() {
         return username;
     }
 
-    public int getHighScore() {
-        return highScore;
-    }
-
-    public int getTotalCoins() {
-        return totalCoins;
-    }
-
-    public int getTotalDistance() {
-        return totalDistance;
+    public long getBestTime() {
+        return bestTime;
     }
 
     public void setUsername(String username) {
         this.username = username;
     }
 
-    public void setHighScore(int highScore) {
-        this.highScore = highScore;
-    }
-
-    public void setTotalCoins(int totalCoins) {
-        this.totalCoins = totalCoins;
-    }
-
-    public void setTotalDistance(int totalDistance) {
-        this.totalDistance = totalDistance;
+    public void setBestTime(long bestTime) {
+        this.bestTime = bestTime;
     }
 }

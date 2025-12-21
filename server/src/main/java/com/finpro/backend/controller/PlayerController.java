@@ -33,16 +33,16 @@ public class PlayerController {
     public List<Player> getAllPlayers() {
         return playerService.getAllPlayers();
     }
-    
+
     @GetMapping("/{username}")
     public ResponseEntity<Player> getPlayer(@PathVariable String username) {
         return playerService.getPlayerByUsername(username)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/leaderboard")
     public List<Player> getLeaderboard(@RequestParam(defaultValue = "10") int limit) {
-        return playerService.getLeaderboardByHighScore(limit);
+        return playerService.getLeaderboardByBestTime(limit);
     }
 }

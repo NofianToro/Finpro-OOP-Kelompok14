@@ -29,9 +29,10 @@ public class PlayerService {
         return playerRepository.findByUsername(username);
     }
 
-    public List<Player> getLeaderboardByHighScore(int limit) {
+    public List<Player> getLeaderboardByBestTime(int limit) {
         return playerRepository.findAll().stream()
-                .sorted(Comparator.comparingInt(Player::getHighScore).reversed())
+                .filter(p -> p.getBestTime() != Long.MAX_VALUE)
+                .sorted(Comparator.comparingLong(Player::getBestTime))
                 .limit(limit)
                 .collect(Collectors.toList());
     }

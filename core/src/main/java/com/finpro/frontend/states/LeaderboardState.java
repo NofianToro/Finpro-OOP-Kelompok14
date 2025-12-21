@@ -35,52 +35,54 @@ public class LeaderboardState implements GameState {
         this.gsm = gsm;
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
-        
+
         createBasicSkin();
         buildUI();
         loadGlobalLeaderboard(); // Load overall by default
     }
-    
+
     private void createBasicSkin() {
         skin = new Skin();
         BitmapFont font = new BitmapFont();
         skin.add("default", font);
-        
+
         // Colors
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
-        pixmap.setColor(Color.WHITE); pixmap.fill();
+        pixmap.setColor(Color.WHITE);
+        pixmap.fill();
         skin.add("white", new Texture(pixmap));
-        
-        pixmap.setColor(Color.GRAY); pixmap.fill();
+
+        pixmap.setColor(Color.GRAY);
+        pixmap.fill();
         skin.add("gray", new Texture(pixmap));
-        
+
         // Styles
         Label.LabelStyle labelStyle = new Label.LabelStyle();
         labelStyle.font = font;
         labelStyle.fontColor = Color.WHITE;
         skin.add("default", labelStyle);
-        
+
         TextButton.TextButtonStyle textButtonStyle = new TextButton.TextButtonStyle();
         textButtonStyle.font = font;
         textButtonStyle.up = new TextureRegionDrawable(new TextureRegion(skin.get("gray", Texture.class)));
         textButtonStyle.down = new TextureRegionDrawable(new TextureRegion(skin.get("white", Texture.class)));
         skin.add("default", textButtonStyle);
-        
+
         ScrollPane.ScrollPaneStyle scrollPaneStyle = new ScrollPane.ScrollPaneStyle();
         scrollPaneStyle.background = null;
         scrollPaneStyle.vScrollKnob = new TextureRegionDrawable(new TextureRegion(skin.get("white", Texture.class)));
         skin.add("default", scrollPaneStyle);
     }
-    
+
     private void buildUI() {
         Table root = new Table();
         root.setFillParent(true);
         stage.addActor(root);
-        
+
         Label title = new Label("LEADERBOARD", skin);
         title.setFontScale(2f);
         root.add(title).pad(20).colspan(2).row();
-        
+
         // Tabs
         Table tabs = new Table();
         addButton(tabs, "Overall", () -> loadGlobalLeaderboard());
@@ -89,12 +91,12 @@ public class LeaderboardState implements GameState {
             addButton(tabs, "L" + i, () -> loadLevelLeaderboard(level));
         }
         root.add(tabs).fillX().colspan(2).padBottom(10).row();
-        
+
         // Content Area
         contentTable = new Table();
         ScrollPane scrollPane = new ScrollPane(contentTable, skin);
         root.add(scrollPane).grow().colspan(2).row();
-        
+
         // Back Button
         TextButton backBtn = new TextButton("BACK", skin);
         backBtn.addListener(new ClickListener() {
@@ -104,11 +106,11 @@ public class LeaderboardState implements GameState {
             }
         });
         root.add(backBtn).pad(20).left();
-        
+
         statusLabel = new Label("Loading...", skin);
         root.add(statusLabel).right().pad(20);
     }
-    
+
     private void addButton(Table table, String text, Runnable action) {
         TextButton btn = new TextButton(text, skin);
         btn.addListener(new ClickListener() {
@@ -119,88 +121,78 @@ public class LeaderboardState implements GameState {
         });
         table.add(btn).pad(5);
     }
-    
+
     private void loadGlobalLeaderboard() {
         statusLabel.setText("Loading Overall...");
         contentTable.clear();
-        
+
         GameManager.getInstance().getBackendService().getLeaderboard(20, new BackendService.RequestCallback() {
             @Override
             public void onSuccess(String response) {
                 statusLabel.setText("Loaded");
-                parseAndDisplay(response, false);
+                parseAndDisplay(response, 0);
             }
+
             @Override
             public void onError(String error) {
                 statusLabel.setText("Error: " + error);
             }
         });
     }
-    
+
     private void loadLevelLeaderboard(int level) {
         statusLabel.setText("Loading Level " + level + "...");
         contentTable.clear();
-        
-        GameManager.getInstance().getBackendService().getLeaderboardByLevel(level, 20, new BackendService.RequestCallback() {
-            @Override
-            public void onSuccess(String response) {
-                statusLabel.setText("Loaded L" + level);
-                parseAndDisplay(response, true);
-            }
-            @Override
-            public void onError(String error) {
-                statusLabel.setText("Error: " + error);
-            }
-        });
+
+        GameManager.getInstance().getBackendService().getLeaderboardByLevel(level, 20,
+                new BackendService.RequestCallback() {
+                    @Override
+                    public void onSuccess(String response) {
+                        statusLabel.setText("Loaded L" + level);
+                        parseAndDisplay(response, level);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        statusLabel.setText("Error: " + error);
+                    }
+                });
     }
-    
-    private void parseAndDisplay(String jsonResponse, boolean isLevel) {
+
+    private void parseAndDisplay(String jsonResponse, int levelIndex) {
         try {
             JsonValue root = new JsonReader().parse(jsonResponse);
-            
+
             // Header
             contentTable.add(new Label("Rank", skin)).pad(10);
+            contentTable.add(new Label("Player", skin)).pad(10);
             contentTable.add(new Label("Time", skin)).pad(10);
             contentTable.row();
-            
+
             int rank = 1;
             for (JsonValue score : root) {
-                long time = isLevel ? 0 : score.getLong("totalTime"); 
-                // For level specific, we need to extract correct field based on which level request it was.
-                // But wait, the backend returns same Score object structure.
-                // AND helper method getLeaderboardByLevel sorts by level time, but returns the FULL Score object.
-                // The Score object contains level1Time, level2Time, etc.
-                // We need to know WHICH level we are displaying to pick the right field.
-                // Or we can just display totalTime if we assume the user only cares about sorted criteria?
-                // No, level leaderboard should show level time.
-                
-                // Hack: We can infer which time to show if we simply pass the level index to this method.
-                // But I didn't pass it.
-                // Let's simplified: Show "TotalTime" for Overall, and for Level, we need to access dynamic field.
-                
-                // Wait, JsonValue doesn't support dynamic field access easily without logic.
-                // I'll update logic to generic "time" or check fields.
-                // Actually, let's just show totalTime for now to avoid complexity in this quick fix, 
-                // OR better: Just show the time that matches the sorting?
-                
-                // Let's assume the user wants to see the specific level time.
-                // Since I can't easily change the architecture now without passing more args, 
-                // I will try to retrieve the specific field if possible.
-                
-                // Actually, I can fix `loadLevelLeaderboard` to pass level to `parseAndDisplay`.
-                // But `parseAndDisplay` signature is fixed in my thought? No I can change it.
-                // But I already wrote `parseAndDisplay(response, true)`.
-                
-                // I'll make `parseAndDisplay` smart or just show totalTime formatted
+                String username = score.getString("username", "Unknown");
+                long time = 0;
+
+                if (levelIndex == 0) {
+                    time = score.getLong("totalTime");
+                } else {
+                    // Try to get specific level time. Field names in DTO are level1Time, level2Time
+                    // etc.
+                    time = score.getLong("level" + levelIndex + "Time");
+                }
+
                 contentTable.add(new Label(String.valueOf(rank++), skin)).pad(5);
+                contentTable.add(new Label(username, skin)).pad(5);
                 contentTable.add(new Label(formatTime(time), skin)).pad(5);
                 contentTable.row();
             }
         } catch (Exception e) {
             statusLabel.setText("Parse Error");
+            Gdx.app.error("Leaderboard", "Error parsing: " + e.getMessage());
         }
     }
-    
+
     private String formatTime(long millis) {
         long minutes = (millis / 1000) / 60;
         long seconds = (millis / 1000) % 60;

@@ -1,5 +1,6 @@
 package com.finpro.backend.controller;
 
+import com.finpro.backend.dto.LeaderboardEntryDTO;
 import com.finpro.backend.model.Score;
 import com.finpro.backend.service.ScoreService;
 import org.springframework.http.ResponseEntity;
@@ -24,8 +25,14 @@ public class ScoreController {
     }
 
     @GetMapping("/leaderboard")
-    public List<Score> getLeaderboard(@RequestParam(defaultValue = "10") int limit) {
+    public List<LeaderboardEntryDTO> getLeaderboard(@RequestParam(defaultValue = "10") int limit) {
         return scoreService.getLeaderboard(limit);
+    }
+
+    @GetMapping("/leaderboard/level/{level}")
+    public List<LeaderboardEntryDTO> getLeaderboardByLevel(@PathVariable int level,
+            @RequestParam(defaultValue = "10") int limit) {
+        return scoreService.getLeaderboardByLevel(level, limit);
     }
 
     @GetMapping("/recent")
