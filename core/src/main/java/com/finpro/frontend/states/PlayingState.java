@@ -3,12 +3,12 @@ package com.finpro.frontend.states;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20; // Tambahkan Import ini
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.GlyphLayout; // Tambahkan Import ini
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -73,20 +73,18 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
     private Array<Portal> activePortals;
     private ProjectileMovementStrategy linearStrategy;
     private Texture bluePortalTex, orangePortalTex;
-    private Texture bulletBlueTex, bulletOrangeTex;
+    private Texture bulletBlueTex, bulletOrangeTex, bulletRedTex;
     private Animation<TextureRegion> bluePortalAnim, orangePortalAnim;
     private SpriteBatch batch;
     private final int screenWidth;
     private final int screenHeight;
 
     private final String[] levels = { "map/intro.tmx", "map/level_1.tmx", "map/level_2.tmx", "map/level_3.tmx",
-        "map/level_4.tmx", "map/level_5.tmx" };
+            "map/level_4.tmx", "map/level_5.tmx" };
     private int currentLevelIndex = 0;
 
-    // --- VARIABEL BARU UNTUK TRANSISI ---
-    private boolean isLevelTransitioning = false; // Flag apakah level sudah selesai
-    private GlyphLayout layout; // Untuk mengatur posisi text di tengah
-    // ------------------------------------
+    private boolean isLevelTransitioning = false;
+    private GlyphLayout layout;
 
     public PlayingState(GameStateManager gsm) {
         this.gsm = gsm;
@@ -103,12 +101,11 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
 
         GameManager.getInstance().startGame();
 
-        // Initialize Timer
         timerFont = new BitmapFont();
         timerFont.setColor(Color.WHITE);
         timerFont.getData().setScale(1.5f);
 
-        layout = new GlyphLayout(); // Initialize Layout
+        layout = new GlyphLayout();
 
         gameTimer = new GameTimer();
         gameTimer.addObserver(this);
@@ -172,34 +169,35 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         activeBullets = new Array<>();
         activePortals = new Array<>();
         turrets = levelFactory.parseTurrets(bulletPool);
-        if (turrets.size == 0) {
-            turrets.add(new Turret(300, 200, bulletPool));
-        }
+
         linearStrategy = new LinearMovementStrategy();
 
         if (batch == null)
             batch = new SpriteBatch();
 
         if (bluePortalTex == null) {
-            bluePortalTex = new Texture("portal_strip_blue.png");
+            bluePortalTex = new Texture("assets/portal_strip_blue.png");
             TextureRegion[][] tmp = TextureRegion.split(bluePortalTex, bluePortalTex.getWidth() / 8,
-                bluePortalTex.getHeight());
+                    bluePortalTex.getHeight());
             bluePortalAnim = new Animation<>(0.1f, tmp[0]);
             bluePortalAnim.setPlayMode(Animation.PlayMode.LOOP);
         }
         if (orangePortalTex == null) {
-            orangePortalTex = new Texture("portal_strip_orange.png");
+            orangePortalTex = new Texture("assets/portal_strip_orange.png");
             TextureRegion[][] tmp = TextureRegion.split(orangePortalTex, orangePortalTex.getWidth() / 8,
-                orangePortalTex.getHeight());
+                    orangePortalTex.getHeight());
             orangePortalAnim = new Animation<>(0.1f, tmp[0]);
             orangePortalAnim.setPlayMode(Animation.PlayMode.LOOP);
         }
 
         if (bulletBlueTex == null) {
-            bulletBlueTex = new Texture("player/Bullet/bullet_blue.png");
+            bulletBlueTex = new Texture("assets/player/Bullet/bullet_blue.png");
         }
         if (bulletOrangeTex == null) {
-            bulletOrangeTex = new Texture("player/Bullet/bullet_orange.png");
+            bulletOrangeTex = new Texture("assets/player/Bullet/bullet_orange.png");
+        }
+        if (bulletRedTex == null) {
+            bulletRedTex = new Texture("assets/player/Bullet/bullet_red.png");
         }
         camera.position.set(player.getBounds().x, player.getBounds().y, 0);
         camera.update();
@@ -207,8 +205,8 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
 
     @Override
     public void onLevelFinished() {
-        // Mencegah trigger ganda
-        if (isLevelTransitioning) return;
+        if (isLevelTransitioning)
+            return;
 
         // Record level time
         long duration = gameTimer.getLevelDuration();
@@ -218,10 +216,8 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         // Aktifkan mode transisi (layar hitam)
         isLevelTransitioning = true;
 
-        // Opsional: Pause timer atau logika lain di sini jika perlu
     }
 
-    // Method baru untuk pindah level sebenarnya (dipanggil saat tekan spasi)
     private void proceedToNextLevel() {
         currentLevelIndex++;
         if (currentLevelIndex < levels.length) {
@@ -252,16 +248,12 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
     }
 
     public void update(float delta) {
-        // --- LOGIKA UPDATE SAAT TRANSISI ---
         if (isLevelTransitioning) {
-            // Tunggu input spasi
             if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
                 proceedToNextLevel();
             }
-            // Jangan update player/musuh/timer saat layar hitam
             return;
         }
-        // -----------------------------------
 
         if (gameTimer != null)
             gameTimer.update();
@@ -276,7 +268,9 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         updateCamera();
     }
 
-    // ... (Metode updateTurrets, updateBullets, updateCamera, updateProjectiles, updatePortals, resetPortals, teleportPlayer, shoot, spawnPortal TETAP SAMA) ...
+    // ... (Metode updateTurrets, updateBullets, updateCamera, updateProjectiles,
+    // updatePortals, resetPortals, teleportPlayer, shoot, spawnPortal TETAP SAMA)
+    // ...
 
     private void updateTurrets(float delta) {
         for (Turret turret : turrets) {
@@ -297,13 +291,11 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
                     break;
                 }
             }
-            if (activeBullets.contains(b, true)) {
-                if (b.getBounds().x < 0 || b.getBounds().x > mapWidth ||
-                    b.getBounds().y < 0 || b.getBounds().y > mapHeight) {
-                    b.setActive(false);
-                    bulletPool.free(b);
-                    iter.remove();
-                }
+            if (activeBullets.contains(b, true) && (b.getBounds().x < 0 || b.getBounds().x > mapWidth ||
+                    b.getBounds().y < 0 || b.getBounds().y > mapHeight)) {
+                b.setActive(false);
+                bulletPool.free(b);
+                iter.remove();
             }
         }
     }
@@ -344,7 +336,7 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
             }
 
             if (p.getBounds().x < 0 || p.getBounds().x > mapWidth ||
-                p.getBounds().y < 0 || p.getBounds().y > mapHeight) {
+                    p.getBounds().y < 0 || p.getBounds().y > mapHeight) {
                 p.setActive(false);
                 projectilePool.free(p);
                 iter.remove();
@@ -467,8 +459,8 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         }
 
         Rectangle proposed = new Rectangle(portalX, portalY,
-            horizontal ? portalLength : portalDepth,
-            horizontal ? portalDepth : portalLength);
+                horizontal ? portalLength : portalDepth,
+                horizontal ? portalDepth : portalLength);
 
         for (Wall other : walls) {
             if (other == wall)
@@ -485,8 +477,8 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         }
 
         Portal portal = portalFactory.createPortal(
-            portalX, portalY, p.getType(), horizontal,
-            p.getVelocity().x, p.getVelocity().y);
+                portalX, portalY, p.getType(), horizontal,
+                p.getVelocity().x, p.getVelocity().y);
 
         activePortals.add(portal);
 
@@ -522,8 +514,15 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         for (Projectile p : activeProjectiles) {
             String type = p.getType();
             if ("ORANGE".equals(type)) {
-                p.render(batch, bulletBlueTex); // Sepertinya ini typo tekstur di kode asli, saya biarkan
+                p.render(batch, bulletOrangeTex);
+            } else {
+                p.render(batch, bulletBlueTex);
             }
+        }
+
+        // Render Turret Bullets
+        for (Bullet b : activeBullets) {
+            b.render(batch, bulletRedTex);
         }
 
         renderTimerHUD(batch);
@@ -532,20 +531,14 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        for (Projectile p : activeProjectiles)
-            p.render(shapeRenderer);
-
-        for (Bullet b : activeBullets)
-            b.render(shapeRenderer);
-
         for (Turret turret : turrets) {
             turret.render(shapeRenderer);
         }
         shapeRenderer.end();
 
-        // --- RENDER LAYAR HITAM DAN TEKS SAAT TRANSISI ---
         if (isLevelTransitioning) {
-            // Aktifkan blending agar bisa transparansi (optional, jika ingin hitam pekat alpha = 1)
+            // Aktifkan blending agar bisa transparansi (optional, jika ingin hitam pekat
+            // alpha = 1)
             Gdx.gl.glEnable(GL20.GL_BLEND);
             Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
@@ -560,7 +553,6 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
 
             Gdx.gl.glDisable(GL20.GL_BLEND);
 
-            // Render Text
             batch.begin();
             batch.getProjectionMatrix().setToOrtho2D(0, 0, screenWidth, screenHeight);
             batch.setProjectionMatrix(batch.getProjectionMatrix());
@@ -577,16 +569,13 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
             timerFont.draw(batch, text2, (screenWidth - layout.width) / 2, (screenHeight / 2) - 50);
 
             batch.end();
-
-            // Kembalikan projection matrix kamera untuk frame berikutnya
             shapeRenderer.setProjectionMatrix(camera.combined);
         }
-        // -------------------------------------------------
     }
 
     private void renderTimerHUD(SpriteBatch batch) {
         if (timerFont != null) {
-            timerFont.getData().setScale(1.5f); // Reset scale
+            timerFont.getData().setScale(1.5f);
             timerFont.draw(batch, timerTextLevel, 10, screenHeight - 10);
             timerFont.draw(batch, timerTextTotal, 10, screenHeight - 35);
         }

@@ -220,11 +220,13 @@ public class Player {
 
         float angleDeg = MathUtils.atan2(mousePos.y - centerY, mousePos.x - centerX) * MathUtils.radDeg;
 
-        /* If facing left (-180 to 180), we want to map it to -90 to 90 relative to
-        "Left".
-        Angle 180 -> 0 relative
-        Angle 90 -> 90.
-        Angle -90 -> -90. */
+        /*
+         * If facing left (-180 to 180), we want to map it to -90 to 90 relative to
+         * "Left".
+         * Angle 180 -> 0 relative
+         * Angle 90 -> 90.
+         * Angle -90 -> -90.
+         */
 
         float relativeAngle = angleDeg;
         if (flipX) {
@@ -233,7 +235,6 @@ public class Player {
             else
                 relativeAngle = -180 - relativeAngle;
         }
-
 
         float clampedAngle = MathUtils.clamp(relativeAngle, -90, 90);
 
