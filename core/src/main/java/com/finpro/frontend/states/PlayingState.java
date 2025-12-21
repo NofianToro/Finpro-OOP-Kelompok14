@@ -549,12 +549,12 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
             Gdx.gl.glEnable(GL20.GL_BLEND);
             Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
-            shapeRenderer.setProjectionMatrix(camera.projection); // Gunakan koordinat layar (UI), bukan world
+            shapeRenderer.setProjectionMatrix(camera.projection);
             shapeRenderer.getProjectionMatrix().setToOrtho2D(0, 0, screenWidth, screenHeight);
             shapeRenderer.updateMatrices();
 
             shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-            shapeRenderer.setColor(0, 0, 0, 1f); // Hitam pekat (Alpha 1.0f). Ubah ke 0.8f jika ingin transparan.
+            shapeRenderer.setColor(0, 0, 0, 1f);
             shapeRenderer.rect(0, 0, screenWidth, screenHeight);
             shapeRenderer.end();
 

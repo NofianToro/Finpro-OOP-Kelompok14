@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="45" tilewidth="16" tileheight="16" infinite="0" nextlayerid="15" nextobjectid="31">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="45" tilewidth="16" tileheight="16" infinite="0" nextlayerid="15" nextobjectid="36">
  <tileset firstgid="1" name="Dungeon Tile Set" tilewidth="16" tileheight="16" tilecount="270" columns="15">
   <image source="Dungeon Tile Set.png" width="240" height="288"/>
  </tileset>
@@ -406,7 +406,7 @@
  <objectgroup id="10" name="Exit">
   <object id="28" x="1216.5" y="289" width="29" height="61"/>
  </objectgroup>
- <objectgroup color="#00a000" id="8" name="Hole">
+ <objectgroup color="#00a000" id="8" name="Hole" visible="0">
   <object id="25" x="128" y="448" width="33" height="32.5"/>
   <object id="26" x="926.333" y="479.333" width="161.667" height="31.6667"/>
  </objectgroup>
@@ -442,5 +442,9 @@
   <object id="22" x="413.333" y="78.6667" width="163.333" height="17.3333"/>
   <object id="23" x="496" y="160.667" width="128.667" height="178.667"/>
   <object id="24" x="607.333" y="334.667" width="16" height="82"/>
+  <object id="31" x="127.5" y="447.977" width="2.38636" height="31.5227"/>
+  <object id="32" x="157.545" y="447.909" width="2.18182" height="32"/>
+  <object id="33" x="926.5" y="480" width="161.5" height="1.75"/>
+  <object id="34" x="928" y="509.75" width="159.25" height="2.75"/>
  </objectgroup>
 </map>
