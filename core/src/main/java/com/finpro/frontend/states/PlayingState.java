@@ -80,7 +80,7 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
     private final int screenHeight;
 
     private final String[] levels = { "map/intro.tmx", "map/level_1.tmx", "map/level_2.tmx", "map/level_3.tmx",
-            "map/level_4.tmx", "map/level_5.tmx" };"map/level_4.tmx","map/level_5.tmx"};
+            "map/level_4.tmx", "map/level_5.tmx" };
     private int currentLevelIndex = 0;
 
     private boolean isLevelTransitioning = false;
@@ -179,14 +179,12 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
             bluePortalTex = new Texture("assets/portal_strip_blue.png");
             TextureRegion[][] tmp = TextureRegion.split(bluePortalTex, bluePortalTex.getWidth() / 8,
                     bluePortalTex.getHeight());
-                    bluePortalTex.getHeight());
             bluePortalAnim = new Animation<>(0.1f, tmp[0]);
             bluePortalAnim.setPlayMode(Animation.PlayMode.LOOP);
         }
         if (orangePortalTex == null) {
             orangePortalTex = new Texture("assets/portal_strip_orange.png");
             TextureRegion[][] tmp = TextureRegion.split(orangePortalTex, orangePortalTex.getWidth() / 8,
-                    orangePortalTex.getHeight());
                     orangePortalTex.getHeight());
             orangePortalAnim = new Animation<>(0.1f, tmp[0]);
             orangePortalAnim.setPlayMode(Animation.PlayMode.LOOP);
@@ -293,14 +291,11 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
                     break;
                 }
             }
-            if (activeBullets.contains(b, true)) {
-                if (b.getBounds().x < 0 || b.getBounds().x > mapWidth ||
-                        b.getBounds().y < 0 || b.getBounds().y > mapHeight) {
-                        b.getBounds().y < 0 || b.getBounds().y > mapHeight) {
-                    b.setActive(false);
-                    bulletPool.free(b);
-                    iter.remove();
-                }
+            if (activeBullets.contains(b, true) && (b.getBounds().x < 0 || b.getBounds().x > mapWidth ||
+                    b.getBounds().y < 0 || b.getBounds().y > mapHeight)) {
+                b.setActive(false);
+                bulletPool.free(b);
+                iter.remove();
             }
         }
     }
@@ -341,7 +336,6 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
             }
 
             if (p.getBounds().x < 0 || p.getBounds().x > mapWidth ||
-                    p.getBounds().y < 0 || p.getBounds().y > mapHeight) {
                     p.getBounds().y < 0 || p.getBounds().y > mapHeight) {
                 p.setActive(false);
                 projectilePool.free(p);
@@ -467,8 +461,6 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         Rectangle proposed = new Rectangle(portalX, portalY,
                 horizontal ? portalLength : portalDepth,
                 horizontal ? portalDepth : portalLength);
-                horizontal ? portalLength : portalDepth,
-                horizontal ? portalDepth : portalLength);
 
         for (Wall other : walls) {
             if (other == wall)
@@ -485,8 +477,6 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         }
 
         Portal portal = portalFactory.createPortal(
-                portalX, portalY, p.getType(), horizontal,
-                p.getVelocity().x, p.getVelocity().y);
                 portalX, portalY, p.getType(), horizontal,
                 p.getVelocity().x, p.getVelocity().y);
 
