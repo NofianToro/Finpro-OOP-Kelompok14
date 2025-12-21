@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="45" tilewidth="16" tileheight="16" infinite="0" nextlayerid="15" nextobjectid="35">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="45" tilewidth="16" tileheight="16" infinite="0" nextlayerid="15" nextobjectid="36">
  <tileset firstgid="1" name="Cyberpunk" tilewidth="16" tileheight="16" tilecount="256" columns="16">
   <image source="Cyberpunk.png" width="256" height="256"/>
  </tileset>
@@ -20,7 +20,7 @@
  </imagelayer>
  <layer id="11" name="Background" width="80" height="45">
   <data encoding="base64" compression="zlib">
-   eJzt0jEKw0AQxdDBLpL739WpU7lIZ8wSWaBtHlsO+sc289lmjrzla59573lXup9dup9dup9dup9dup9dup9dut9qz3f13/5+Pd/Vf/trf+3vOba/9tf+vLa/9tf+vLa/9tf+vLa/9vdkV99N7+Xfrr6b3oNdeg926X526X526X526X526X526X526X526X526X526X526X526X526X526X526X526X526X526X52v/6TC2E=
+   eJzt1jEOgzAUBNEvKMI9khsk978VqeOGIh0Ci/GisYSeXFo7BetU9W3fqod8zFXLrEel90uX3i9der906f3SpfdLl94vXXq/dOn90qX36+129t7t79/t7L3bn/3Z3zjan/3ZX672Z3/2l6v92Z/93dfe76Z7udre76Z7SJfuIV16v3Tp/dKl90uX3i/dK/d6tv/WV513hO6I/t7t7Z867wjd2Z/9jaD92Z/92Z/92d/o/d1Rer906f3SpfdLl94v3R90xuMI
   </data>
  </layer>
  <objectgroup id="5" name="Ground">
@@ -28,18 +28,19 @@
  </objectgroup>
  <layer id="9" name="Tile Layer 1" width="80" height="45">
   <data encoding="base64" compression="zlib">
-   eJzt2MENgkAQRuHZxQbUBpAG1P5v3rUFbUErMMQLMSi4/2YzK+8lc9XJJ5GFNpjtMk0XLLk28+eVamxv/OaHnxZ+Wvhp4aflxW8fzA5vc8RvdqcP4z0vfrWGnxZ+Wvhp4aeFn5ZHv3Uw23yZraPfyaPf1E6ernP85nWOZpf4+674vbpGs9uI39hzZ+rkel716HePZo8RP4959Gsas1VT/ntTKu03db+v4RwwrLRf6j3A0zlg2NR/cu73gv/mVzr8tPDTwk8LPy38tPDTqsEv9Yxf4txfg5/H9zzqbvhpu+Gn7Yaftht+2m74abvhp+2Gn7Ybftpu/R45nwuWNv1zUM7rYmnT4YcfftVOfx97Al9zvwI=
+   eJztmUFOw0AMRd2mFwAuQNqKfVTUPQL1AuXCsIcrwBXgBHiULlBIpMZ26m/iL319qYuZkfWnr+psiWjD3hrkHclVd9azOtPUec/eGeVeMb+ms57VmabOMsNH9pNBzrV/VmvNtX9Wa821f1b317p/3rO5dGr7530XvVPTv9cBv4AnCn+jCoW/UYXC36hC4W9UofA3qlD4G1We/K3YK8P0kCd/64F1IrHfk7/NwDqSvQ8j9x6rtyXR+/Lv5578faA4/fvg2X32zO/IfjbMMSr3N0r/vnh23z3z81S5v1H6VzGkVtXEm4xUub8I/dNw31Mo/G0E+21O9pTnd+9vSf973Cn2/E8q/ZP85vDuH4q6by/nZvavVfft5dzM/rUq/ZPc3+xfq6j8RVHyV6cI/EX+ry8Cf6Vn7Evrd4II/JWe8RLvBBH4i94/dP6i9w+dv+j9Q+cvev+Sv3Ilf3VK/uqk4e/Vgug6LfIN+5Zdp0Ve5/xyfjm/sC7z+wEMD1A3
   </data>
  </layer>
  <objectgroup color="#aa0000" id="10" name="Wall">
   <object id="18" x="0.666667" y="1.33333" width="319.333" height="302.667"/>
-  <object id="20" x="592" y="223.333" width="145.333" height="144.667"/>
+  <object id="20" x="497.333" y="223.333" width="317.333" height="144.667"/>
   <object id="21" x="416.667" y="480" width="318.667" height="158.667"/>
-  <object id="25" x="543.333" y="1.33333" width="96.6667" height="110"/>
+  <object id="25" x="543.333" y="1.33333" width="738.667" height="110"/>
   <object id="30" x="1040" y="319.667" width="239.083" height="319"/>
+  <object id="35" x="878" y="998" width="2"/>
  </objectgroup>
  <objectgroup id="14" name="BlackWall">
-  <object id="33" x="544.167" y="112.917" width="96" height="14.75"/>
+  <object id="33" x="544.167" y="112.917" width="738" height="14.75"/>
  </objectgroup>
  <objectgroup id="7" name="Spawn">
   <object id="5" x="32" y="577.333" width="29.3333" height="62.6667"/>

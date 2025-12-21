@@ -46,13 +46,13 @@ public class Player {
 
     private void initGraphics() {
         // Body - Idle (192 width / 4 frames = 48)
-        idleTex = new Texture("assets/player/Body/Idle1.png");
+        idleTex = new Texture("player/Body/Idle1.png");
         TextureRegion[][] idleTmp = TextureRegion.split(idleTex, 48, 48);
         idleAnim = new Animation<>(0.15f, idleTmp[0]);
         idleAnim.setPlayMode(Animation.PlayMode.LOOP);
 
         // Body - Run (288 width / 6 frames = 48)
-        runTex = new Texture("assets/player/Body/Run1.png");
+        runTex = new Texture("player/Body/Run1.png");
         TextureRegion[][] runTmp = TextureRegion.split(runTex, 48, 48);
         runAnim = new Animation<>(0.1f, runTmp[0]);
         runAnim.setPlayMode(Animation.PlayMode.LOOP);
@@ -60,7 +60,7 @@ public class Player {
         // Body - Jump (Assuming similar format, usually jump has separate Up/Down or
         // loop)
         // Let's check Jump1 size? Or just assume 48x48.
-        jumpTex = new Texture("assets/player/Body/Jump1.png");
+        jumpTex = new Texture("player/Body/Jump1.png");
         // Assuming Jump1 is maybe just 1 frame or strip. Let's try split 48.
         TextureRegion[][] jumpTmp = TextureRegion.split(jumpTex, 48, 48);
         jumpAnim = new Animation<>(0.1f, jumpTmp[0]);
@@ -69,11 +69,11 @@ public class Player {
         hands = new Array<>();
         for (int i = 1; i <= 5; i++) {
             // User said Hand files are "1.png" to "5.png"
-            hands.add(new TextureRegion(new Texture("assets/player/Hand/" + i + ".png")));
+            hands.add(new TextureRegion(new Texture("player/Hand/" + i + ".png")));
         }
 
         // Gun
-        gunTex = new Texture("assets/player/Gun/10_1.png");
+        gunTex = new Texture("player/Gun/10_1.png");
     }
 
     public void addListener(LevelListener listener) {
