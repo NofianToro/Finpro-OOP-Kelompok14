@@ -8,8 +8,8 @@ import com.badlogic.gdx.math.Vector2;
 public class Bullet {
     private Vector2 position;
     private Vector2 velocity;
-    private float width = 8f;
-    private float height = 8f;
+    private float width = 32f;
+    private float height = 32f;
     private boolean active;
     private Rectangle bounds;
 
@@ -39,6 +39,12 @@ public class Bullet {
             return;
         shapeRenderer.setColor(Color.RED);
         shapeRenderer.rect(position.x, position.y, width, height);
+    }
+
+    public void render(com.badlogic.gdx.graphics.g2d.SpriteBatch batch, com.badlogic.gdx.graphics.Texture texture) {
+        if (!active)
+            return;
+        batch.draw(texture, position.x, position.y, width, height);
     }
 
     public boolean isActive() {
