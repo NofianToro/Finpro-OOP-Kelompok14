@@ -49,13 +49,10 @@ public class Projectile {
         bounds.setPosition(position);
     }
 
-    // ... getters
-
     public Vector2 getPreviousPosition() {
         return previousPosition;
     }
 
-    // ... existing getters
     public void render(ShapeRenderer shapeRenderer) {
         if (!active)
             return;
@@ -72,18 +69,17 @@ public class Projectile {
         if (!active)
             return;
 
-        // Calculate rotation
-        float angle = velocity.angleDeg();
+        float angle = velocity.angleDeg(); // Calculate rotation
 
         batch.draw(texture,
                 position.x, position.y,
-                width / 2, height / 2, // Origin center
-                width, height, // Width height
-                1, 1, // scale
-                angle, // rotation
-                0, 0, // srcX, srcY
-                texture.getWidth(), texture.getHeight(), // srcWidth, srcHeight
-                false, false // flip
+                width / 2, height / 2,
+                width, height,
+                1, 1,
+                angle,
+                0, 0,
+                texture.getWidth(), texture.getHeight(),
+                false, false
         );
     }
 

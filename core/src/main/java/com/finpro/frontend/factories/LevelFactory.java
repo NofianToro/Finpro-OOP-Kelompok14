@@ -67,6 +67,7 @@ public class LevelFactory {
         return walls;
     }
 
+    //Player Spawn
     public Vector2 getPlayerSpawnPoint(TiledMap map) {
         MapLayer spawnLayer = map.getLayers().get("Spawn");
         if (spawnLayer != null && spawnLayer.getObjects().getCount() > 0) {
@@ -79,9 +80,10 @@ public class LevelFactory {
         return new Vector2(100, 200);
     }
 
+    //Turret
     public Array<Turret> parseTurrets(BulletPool pool) {
         Array<Turret> turrets = new Array<>();
-        MapLayer layer = map.getLayers().get("Turret"); // Assuming layer name is "Turret"
+        MapLayer layer = map.getLayers().get("Turret");
         if (layer != null) {
             for (MapObject object : layer.getObjects()) {
                 if (object instanceof RectangleMapObject) {

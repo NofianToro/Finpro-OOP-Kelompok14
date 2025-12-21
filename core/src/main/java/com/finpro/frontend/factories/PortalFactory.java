@@ -13,9 +13,9 @@ public class PortalFactory {
     public Portal createPortal(float x, float y, String type, boolean isHorizontal, float velocityX, float velocityY) {
         Portal portal = portalPool.obtain();
 
-        // Calculate Normal Vector (Direction pointing OUT of the wall)
-        // If projectile hit wall moving RIGHT (velX > 0), normal should be LEFT (-1, 0)
-        // If projectile hit floor moving DOWN (velY < 0), normal should be UP (0, 1)
+        // Portal direction pointing OUT of the wall
+        // (velocityX > 0)  LEFT (-1, 0)
+        // (velocityY < 0)  UP (0, 1)
         float nx = 0, ny = 0;
 
         if (isHorizontal) {

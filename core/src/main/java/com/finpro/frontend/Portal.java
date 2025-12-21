@@ -83,18 +83,12 @@ public class Portal {
         float cy = position.y + bounds.height / 2f;
 
         if (orientation == Orientation.HORIZONTAL) {
-            // Rotate 90 degrees.
-            // We need to draw centered at (cx, cy).
-            // Batch draw takes (x, y) as the bottom-left corner of the sprite *before*
-            // rotation.
-            // Origin should be center of sprite.
-
             batch.draw(currentFrame,
-                    cx - drawWidth / 2f, cy - drawHeight / 2f, // X, Y (bottom-left relative to center)
-                    drawWidth / 2f, drawHeight / 2f, // Origin (center of sprite)
-                    drawWidth, drawHeight, // Width, Height
-                    1, 1, // Scale
-                    90f); // Rotation
+                    cx - drawWidth / 2f, cy - drawHeight / 2f,
+                    drawWidth / 2f, drawHeight / 2f,
+                    drawWidth, drawHeight,
+                    1, 1,
+                    90f);
         } else {
             // Vertical - No rotation
             batch.draw(currentFrame,
@@ -103,7 +97,6 @@ public class Portal {
         }
     }
 
-    // Legacy ShapeRenderer for debug (optional, can keep or remove)
     public void render(ShapeRenderer shapeRenderer) {
         if (!active)
             return;

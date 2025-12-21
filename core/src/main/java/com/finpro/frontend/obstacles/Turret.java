@@ -12,11 +12,9 @@ public class Turret {
     private Vector2 position;
     private float width = 32f;
     private float height = 32f;
-
     private float timer;
-    private final float WAIT_TIME = 2.0f; // Slower fire rate
-    private float fixedAngle = 0f; // Default to Right. Friend can change this to 180 for Left.
-
+    private final float WAIT_TIME = 2.0f;
+    private float fixedAngle = 0f;
     private BulletPool bulletPool;
 
     public Turret(float x, float y, BulletPool pool) {

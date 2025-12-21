@@ -45,30 +45,26 @@ public class Player {
     }
 
     private void initGraphics() {
-        // Body - Idle (192 width / 4 frames = 48)
+        // Body - Idle
         idleTex = new Texture("player/Body/Idle1.png");
         TextureRegion[][] idleTmp = TextureRegion.split(idleTex, 48, 48);
         idleAnim = new Animation<>(0.15f, idleTmp[0]);
         idleAnim.setPlayMode(Animation.PlayMode.LOOP);
 
-        // Body - Run (288 width / 6 frames = 48)
+        // Body - Run
         runTex = new Texture("player/Body/Run1.png");
         TextureRegion[][] runTmp = TextureRegion.split(runTex, 48, 48);
         runAnim = new Animation<>(0.1f, runTmp[0]);
         runAnim.setPlayMode(Animation.PlayMode.LOOP);
 
-        // Body - Jump (Assuming similar format, usually jump has separate Up/Down or
-        // loop)
-        // Let's check Jump1 size? Or just assume 48x48.
+        // Body - Jump
         jumpTex = new Texture("player/Body/Jump1.png");
-        // Assuming Jump1 is maybe just 1 frame or strip. Let's try split 48.
         TextureRegion[][] jumpTmp = TextureRegion.split(jumpTex, 48, 48);
         jumpAnim = new Animation<>(0.1f, jumpTmp[0]);
 
         // Hands (1-5)
         hands = new Array<>();
         for (int i = 1; i <= 5; i++) {
-            // User said Hand files are "1.png" to "5.png"
             hands.add(new TextureRegion(new Texture("player/Hand/" + i + ".png")));
         }
 
@@ -182,15 +178,12 @@ public class Player {
             jumpTex.dispose();
         if (gunTex != null)
             gunTex.dispose();
-        // Hands regions share textures if we loaded individually?
-        // We loaded new Texture for each hand frame in the loop.
         for (TextureRegion tr : hands) {
             tr.getTexture().dispose();
         }
     }
 
     public void stopHorizontalMovement() {
-        // Don't stop if we have portal momentum
         if (!hasPortalMomentum) {
             velocity.x = 0;
         }
@@ -202,11 +195,10 @@ public class Player {
     }
 
     public void render(SpriteBatch batch, Vector2 mousePos) {
-        // Determine Facing
+        // Determine Portal Face
         boolean flipX = mousePos.x < (position.x + WIDTH / 2f);
-        this.facingRight = !flipX; // Update local state for projectile or other logic
+        this.facingRight = !flipX;
 
-        // Select Body Animation
         TextureRegion currentBodyFrame;
         if (!isOnGround) {
             currentBodyFrame = jumpAnim.getKeyFrame(stateTime);
@@ -222,40 +214,34 @@ public class Player {
 
         batch.draw(currentBodyFrame, position.x, position.y, WIDTH, HEIGHT);
 
-        // CALCULATE ARM ANGLE
+        // Arm Angle
         float centerX = position.x + WIDTH / 2f;
         float centerY = position.y + HEIGHT / 2f;
 
         float angleDeg = MathUtils.atan2(mousePos.y - centerY, mousePos.x - centerX) * MathUtils.radDeg;
 
+        /* If facing left (-180 to 180), we want to map it to -90 to 90 relative to
+        "Left".
+        Angle 180 -> 0 relative
+        Angle 90 -> 90.
+        Angle -90 -> -90. */
+
         float relativeAngle = angleDeg;
         if (flipX) {
-            // If facing left (-180 to 180), we want to map it to -90 to 90 relative to
-            // "Left".
-            // Angle 180 -> 0 relative.
-            // Angle 90 -> 90.
-            // Angle -90 -> -90.
             if (relativeAngle > 0)
-                relativeAngle = 180 - relativeAngle; // 135 -> 45
+                relativeAngle = 180 - relativeAngle;
             else
-                relativeAngle = -180 - relativeAngle; // -135 -> -45
+                relativeAngle = -180 - relativeAngle;
         }
 
-        // Clamp relative angle -90 to 90
+
         float clampedAngle = MathUtils.clamp(relativeAngle, -90, 90);
 
-        // Map -90..90 to Index 0..4 (5 frames)
         float t = (clampedAngle + 90f) / 180f;
         int handIndex = (int) (t * 4); // 0 to 4
         handIndex = MathUtils.clamp(handIndex, 0, 4);
 
         TextureRegion handRegion = hands.get(handIndex);
-
-        // Draw Hand
-        // User said "too far from body".
-        // Let's assume the hand sprite's pivot (shoulder) is at (0, 16) [Left-Middle of
-        // 32x32]?
-        // Left-align hand to body center (tucked in).
 
         float handDrawX = centerX - 16 + (flipX ? 5 : -5); // Tucked in closer
         float handDrawY = centerY - 16; // Centered vertically on shoulder
@@ -270,37 +256,15 @@ public class Player {
                 1, 1, // scale
                 0);
 
-        // Gun Rendering
-        // Calculate visual angle from index (discrete steps)
-        // 0 -> -90, 4 -> 90.
         float visualAngle = -90f + (handIndex / 4f) * 180f; // This is the semantic angle (Up/Down)
-
-        // Arm Length
-        // User said "Gun not connected".
-        // Reduce arm length to bring it closer to hand tip.
         float armLength = 14f;
-
-        // 1. Calculate Standard Position (Right Facing)
-        // Manual offset for "tucked" look (Right facing) included in calc
-        // CenterX - 5 + offset. Offset = Cos * armLength - 7 (pivot).
-        // Wait, current code uses: centerX + (-5) + offset - 7.
-        // Let's use the explicit logic I designed.
-
         float baseGunX = centerX - 5 + (MathUtils.cosDeg(visualAngle) * armLength) - 7;
         float baseGunY = centerY + (MathUtils.sinDeg(visualAngle) * armLength) - 5;
-
         float gunX, gunY;
         float rotation;
-
         if (flipX) {
-            // Mirror X relative to CenterX
-            // gunX = CenterX + (CenterX - (baseGunX + Width)) ? No.
-            // gunX = CenterX - (baseGunX - CenterX) - Width.
-            // gunX = 2*CenterX - baseGunX - 14.
             gunX = (2 * centerX - baseGunX) - 14;
             gunY = baseGunY;
-
-            // Fix vertical swap: Use 180 - angle, not angle + 180.
             rotation = 180f - visualAngle;
         } else {
             gunX = baseGunX;
@@ -308,13 +272,10 @@ public class Player {
             rotation = visualAngle;
         }
 
-        // Draw Gun with Flip Logic
-        // ScaleY = -1 if flipX to keep "Top" up.
-
         batch.draw(gunTex,
                 gunX, gunY,
-                7, 5, // origin (center)
-                14, 10, // width height
+                7, 5,
+                14, 10,
                 1, flipX ? -1 : 1, // scaleX, scaleY (Flip Y if facing left)
                 rotation,
                 0, 0,
@@ -323,9 +284,7 @@ public class Player {
 
     }
 
-    // Legacy ShapeRenderer
     public void render(ShapeRenderer sr) {
-        // bounds debug
         sr.setColor(Color.RED);
         sr.rect(position.x, position.y, WIDTH, HEIGHT);
     }
@@ -349,7 +308,7 @@ public class Player {
 
     public void setVelocity(float x, float y) {
         this.velocity.set(x, y);
-        // Mark that we have portal momentum if there's horizontal velocity
+        // Mark portal momentum for horizontalVelocity
         if (Math.abs(x) > 0.1f) {
             hasPortalMomentum = true;
         }

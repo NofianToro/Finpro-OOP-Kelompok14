@@ -30,7 +30,7 @@ public class InputHandler {
     }
 
     public void handleInput(Player player, float delta) {
-        // 1. Handle Continuous inputs (Movement)
+        // Movement Input
         boolean movementKeyPressed = false;
         for (Map.Entry<Integer, Command> entry : continuousCommands.entrySet()) {
             if (Gdx.input.isKeyPressed(entry.getKey())) {
@@ -39,19 +39,18 @@ public class InputHandler {
             }
         }
 
-        // Stop horizontal movement when no movement keys are pressed
         if (!movementKeyPressed) {
             player.stopHorizontalMovement();
         }
 
-        // 2. Handle Single Press inputs (Jump)
+        // Jump
         for (Map.Entry<Integer, Command> entry : singlePressCommands.entrySet()) {
             if (Gdx.input.isKeyJustPressed(entry.getKey())) {
                 entry.getValue().execute(player, delta);
             }
         }
 
-        // 3. Handle Mouse/Shoot (Generic Commands)
+        // Shooting
         if (shootCommand != null) {
             shootCommand.execute(player, delta);
         }

@@ -177,8 +177,7 @@ public class LeaderboardState implements GameState {
                 if (levelIndex == 0) {
                     time = score.getLong("totalTime");
                 } else {
-                    // Try to get specific level time. Field names in DTO are level1Time, level2Time
-                    // etc.
+                    // Specific Level Time
                     time = score.getLong("level" + levelIndex + "Time");
                 }
 

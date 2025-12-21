@@ -3,10 +3,12 @@ package com.finpro.frontend.states;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20; // Tambahkan Import ini
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout; // Tambahkan Import ini
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -49,24 +51,19 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
     private final GameStateManager gsm;
     private final ShapeRenderer shapeRenderer;
     private final OrthographicCamera camera;
-
     private TiledMap map;
     private OrthogonalTiledMapRenderer mapRenderer;
     private float mapWidth, mapHeight;
-
     private Player player;
     private Array<Wall> walls;
     private Array<Turret> turrets;
     private LevelFactory levelFactory;
     private InputHandler inputHandler;
-
-    // Timer fields
     private GameTimer gameTimer;
-    private String timerTextLevel = ""; // Updated by observer
-    private String timerTextTotal = ""; // Updated by observer
+    private String timerTextLevel = "";
+    private String timerTextTotal = "";
     private Map<Integer, Long> levelTimes;
     private BitmapFont timerFont;
-
     private PortalPool portalPool;
     private ProjectilePool projectilePool;
     private BulletPool bulletPool;
@@ -75,18 +72,21 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
     private Array<Bullet> activeBullets;
     private Array<Portal> activePortals;
     private ProjectileMovementStrategy linearStrategy;
-
     private Texture bluePortalTex, orangePortalTex;
     private Texture bulletBlueTex, bulletOrangeTex;
     private Animation<TextureRegion> bluePortalAnim, orangePortalAnim;
     private SpriteBatch batch;
-
     private final int screenWidth;
     private final int screenHeight;
 
     private final String[] levels = { "map/intro.tmx", "map/level_1.tmx", "map/level_2.tmx", "map/level_3.tmx",
-            "map/level_4.tmx", "map/level_5.tmx" };
+        "map/level_4.tmx", "map/level_5.tmx" };
     private int currentLevelIndex = 0;
+
+    // --- VARIABEL BARU UNTUK TRANSISI ---
+    private boolean isLevelTransitioning = false; // Flag apakah level sudah selesai
+    private GlyphLayout layout; // Untuk mengatur posisi text di tengah
+    // ------------------------------------
 
     public PlayingState(GameStateManager gsm) {
         this.gsm = gsm;
@@ -108,6 +108,8 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         timerFont.setColor(Color.WHITE);
         timerFont.getData().setScale(1.5f);
 
+        layout = new GlyphLayout(); // Initialize Layout
+
         gameTimer = new GameTimer();
         gameTimer.addObserver(this);
         levelTimes = new HashMap<>();
@@ -118,6 +120,9 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
     }
 
     private void loadLevel(int levelIndex) {
+        // Reset flag transisi setiap load level
+        isLevelTransitioning = false;
+
         if (map != null)
             map.dispose();
         if (activeProjectiles != null)
@@ -135,7 +140,7 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         } catch (Exception e) {
             Gdx.app.error("PlayingState", "Failed to load map: " + levels[levelIndex]);
             if (levelIndex == 0)
-                Gdx.app.exit(); // Fatal if intro fails
+                Gdx.app.exit();
             return;
         }
 
@@ -168,7 +173,6 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         activePortals = new Array<>();
         turrets = levelFactory.parseTurrets(bulletPool);
         if (turrets.size == 0) {
-            // Fallback: Spawn a test turret if none found in map
             turrets.add(new Turret(300, 200, bulletPool));
         }
         linearStrategy = new LinearMovementStrategy();
@@ -176,24 +180,21 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         if (batch == null)
             batch = new SpriteBatch();
 
-        // Load Portal Assets
         if (bluePortalTex == null) {
             bluePortalTex = new Texture("portal_strip_blue.png");
-            // 512 width / 8 frames = 64px per frame. Verified 512 width.
             TextureRegion[][] tmp = TextureRegion.split(bluePortalTex, bluePortalTex.getWidth() / 8,
-                    bluePortalTex.getHeight());
+                bluePortalTex.getHeight());
             bluePortalAnim = new Animation<>(0.1f, tmp[0]);
             bluePortalAnim.setPlayMode(Animation.PlayMode.LOOP);
         }
         if (orangePortalTex == null) {
             orangePortalTex = new Texture("portal_strip_orange.png");
             TextureRegion[][] tmp = TextureRegion.split(orangePortalTex, orangePortalTex.getWidth() / 8,
-                    orangePortalTex.getHeight());
+                orangePortalTex.getHeight());
             orangePortalAnim = new Animation<>(0.1f, tmp[0]);
             orangePortalAnim.setPlayMode(Animation.PlayMode.LOOP);
         }
 
-        // Load Bullet Assets
         if (bulletBlueTex == null) {
             bulletBlueTex = new Texture("player/Bullet/bullet_blue.png");
         }
@@ -206,18 +207,28 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
 
     @Override
     public void onLevelFinished() {
-        // Record level time using GameTimer getter
+        // Mencegah trigger ganda
+        if (isLevelTransitioning) return;
+
+        // Record level time
         long duration = gameTimer.getLevelDuration();
         levelTimes.put(currentLevelIndex, duration);
         Gdx.app.log("PlayingState", "Level " + currentLevelIndex + " finished in " + duration + "ms");
 
+        // Aktifkan mode transisi (layar hitam)
+        isLevelTransitioning = true;
+
+        // Opsional: Pause timer atau logika lain di sini jika perlu
+    }
+
+    // Method baru untuk pindah level sebenarnya (dipanggil saat tekan spasi)
+    private void proceedToNextLevel() {
         currentLevelIndex++;
         if (currentLevelIndex < levels.length) {
             loadLevel(currentLevelIndex);
         } else {
-            // Calculate total time (sum of levels 1-5, skipping intro at 0 if desired)
+            // Calculate total time
             long totalTime = 0;
-
             for (int i = 1; i <= 5; i++) {
                 totalTime += levelTimes.getOrDefault(i, 0L);
             }
@@ -241,8 +252,19 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
     }
 
     public void update(float delta) {
+        // --- LOGIKA UPDATE SAAT TRANSISI ---
+        if (isLevelTransitioning) {
+            // Tunggu input spasi
+            if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+                proceedToNextLevel();
+            }
+            // Jangan update player/musuh/timer saat layar hitam
+            return;
+        }
+        // -----------------------------------
+
         if (gameTimer != null)
-            gameTimer.update(); // Tick the timer subject
+            gameTimer.update();
 
         inputHandler.handleInput(player, delta);
         player.update(delta, walls, mapWidth, mapHeight);
@@ -253,6 +275,8 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         updatePortals(delta);
         updateCamera();
     }
+
+    // ... (Metode updateTurrets, updateBullets, updateCamera, updateProjectiles, updatePortals, resetPortals, teleportPlayer, shoot, spawnPortal TETAP SAMA) ...
 
     private void updateTurrets(float delta) {
         for (Turret turret : turrets) {
@@ -265,8 +289,6 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         while (iter.hasNext()) {
             Bullet b = iter.next();
             b.update(delta);
-            // Check collisions (Walls, Player?)
-            // Just Walls for now to clean up
             for (Wall wall : walls) {
                 if (b.getBounds().overlaps(wall.getBounds())) {
                     b.setActive(false);
@@ -275,9 +297,9 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
                     break;
                 }
             }
-            if (activeBullets.contains(b, true)) { // If not removed
+            if (activeBullets.contains(b, true)) {
                 if (b.getBounds().x < 0 || b.getBounds().x > mapWidth ||
-                        b.getBounds().y < 0 || b.getBounds().y > mapHeight) {
+                    b.getBounds().y < 0 || b.getBounds().y > mapHeight) {
                     b.setActive(false);
                     bulletPool.free(b);
                     iter.remove();
@@ -322,7 +344,7 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
             }
 
             if (p.getBounds().x < 0 || p.getBounds().x > mapWidth ||
-                    p.getBounds().y < 0 || p.getBounds().y > mapHeight) {
+                p.getBounds().y < 0 || p.getBounds().y > mapHeight) {
                 p.setActive(false);
                 projectilePool.free(p);
                 iter.remove();
@@ -353,33 +375,23 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
     private void teleportPlayer(Portal entryPortal) {
         Portal exit = entryPortal.getLinkedPortal();
         float offset = 50f;
-
         float targetX = exit.getPosition().x;
         float targetY = exit.getPosition().y;
-
-        // Get player velocity
         Vector2 currentVelocity = player.getVelocity();
         Vector2 entryNormal = entryPortal.getNormal();
         Vector2 exitNormal = exit.getNormal();
-
-        // Calculate velocity
         float speedIntoPortal = -(currentVelocity.x * entryNormal.x + currentVelocity.y * entryNormal.y);
 
-        // Calculate perpendicular velocity
         float entryTangentX = -entryNormal.y;
         float entryTangentY = entryNormal.x;
         float tangentSpeed = currentVelocity.x * entryTangentX + currentVelocity.y * entryTangentY;
 
-        // Exit tangent (perpendicular to exit normal)
         float exitTangentX = -exitNormal.y;
         float exitTangentY = exitNormal.x;
 
-        // New velocity: speed coming OUT of exit portal along exit normal + tangent
-        // component
         float newVelX = speedIntoPortal * exitNormal.x + tangentSpeed * exitTangentX;
         float newVelY = speedIntoPortal * exitNormal.y + tangentSpeed * exitTangentY;
 
-        // Calculate exit position
         if (exit.getOrientation() == Portal.Orientation.HORIZONTAL) {
             targetX += (exit.getBounds().width - player.getBounds().width) / 2f;
             targetY += exit.getNormal().y * offset;
@@ -423,10 +435,10 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         float wallTop = wall.getBounds().y + wall.getBounds().height;
 
         boolean wasOverlappingY = prevY < wallTop && prevTop > wallY;
-        boolean horizontal = !wasOverlappingY; // Hitting Top/Bottom means NOT overlapping on Y previously
+        boolean horizontal = !wasOverlappingY;
 
         float portalLength = 64f;
-        float portalDepth = 10f; // Thickness of the portal visual
+        float portalDepth = 10f;
         float padding = 4f;
 
         float portalX, portalY;
@@ -455,8 +467,8 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         }
 
         Rectangle proposed = new Rectangle(portalX, portalY,
-                horizontal ? portalLength : portalDepth,
-                horizontal ? portalDepth : portalLength);
+            horizontal ? portalLength : portalDepth,
+            horizontal ? portalDepth : portalLength);
 
         for (Wall other : walls) {
             if (other == wall)
@@ -473,8 +485,8 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         }
 
         Portal portal = portalFactory.createPortal(
-                portalX, portalY, p.getType(), horizontal,
-                p.getVelocity().x, p.getVelocity().y);
+            portalX, portalY, p.getType(), horizontal,
+            p.getVelocity().x, p.getVelocity().y);
 
         activePortals.add(portal);
 
@@ -491,11 +503,10 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         mapRenderer.setView(camera);
         mapRenderer.render();
 
-        // Render Portals (Sprites)
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
         for (Portal portal : activePortals) {
-            portal.update(Gdx.graphics.getDeltaTime()); // Update animation state
+            portal.update(Gdx.graphics.getDeltaTime());
             if ("BLUE".equals(portal.getType())) {
                 portal.render(batch, bluePortalAnim);
             } else {
@@ -503,32 +514,23 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
             }
         }
 
-        // Get Mouse aim
         Vector3 mousePos3 = camera.unproject(new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0));
         Vector2 mousePos = new Vector2(mousePos3.x, mousePos3.y);
 
-        // Render Player Sprites
         player.render(batch, mousePos);
 
-        // Render Projectiles
         for (Projectile p : activeProjectiles) {
             String type = p.getType();
-            // Default to blue if null, or handle types
             if ("ORANGE".equals(type)) {
-
-                p.render(batch, bulletBlueTex);
+                p.render(batch, bulletBlueTex); // Sepertinya ini typo tekstur di kode asli, saya biarkan
             }
         }
 
         renderTimerHUD(batch);
-
         batch.end();
 
         shapeRenderer.setProjectionMatrix(camera.combined);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-
-        // Debug render for portal bounds
-        // for (Portal portal : activePortals) portal.render(shapeRenderer);
 
         for (Projectile p : activeProjectiles)
             p.render(shapeRenderer);
@@ -539,14 +541,52 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
         for (Turret turret : turrets) {
             turret.render(shapeRenderer);
         }
-
-        // player.render(shapeRenderer); // Debug block disabled
-
         shapeRenderer.end();
+
+        // --- RENDER LAYAR HITAM DAN TEKS SAAT TRANSISI ---
+        if (isLevelTransitioning) {
+            // Aktifkan blending agar bisa transparansi (optional, jika ingin hitam pekat alpha = 1)
+            Gdx.gl.glEnable(GL20.GL_BLEND);
+            Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+            shapeRenderer.setProjectionMatrix(camera.projection); // Gunakan koordinat layar (UI), bukan world
+            shapeRenderer.getProjectionMatrix().setToOrtho2D(0, 0, screenWidth, screenHeight);
+            shapeRenderer.updateMatrices();
+
+            shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+            shapeRenderer.setColor(0, 0, 0, 1f); // Hitam pekat (Alpha 1.0f). Ubah ke 0.8f jika ingin transparan.
+            shapeRenderer.rect(0, 0, screenWidth, screenHeight);
+            shapeRenderer.end();
+
+            Gdx.gl.glDisable(GL20.GL_BLEND);
+
+            // Render Text
+            batch.begin();
+            batch.getProjectionMatrix().setToOrtho2D(0, 0, screenWidth, screenHeight);
+            batch.setProjectionMatrix(batch.getProjectionMatrix());
+
+            String text1 = "Level Complete!";
+            String text2 = "Press SPACE to Continue";
+
+            timerFont.getData().setScale(2.0f);
+            layout.setText(timerFont, text1);
+            timerFont.draw(batch, text1, (screenWidth - layout.width) / 2, (screenHeight / 2) + 50);
+
+            timerFont.getData().setScale(1.5f);
+            layout.setText(timerFont, text2);
+            timerFont.draw(batch, text2, (screenWidth - layout.width) / 2, (screenHeight / 2) - 50);
+
+            batch.end();
+
+            // Kembalikan projection matrix kamera untuk frame berikutnya
+            shapeRenderer.setProjectionMatrix(camera.combined);
+        }
+        // -------------------------------------------------
     }
 
     private void renderTimerHUD(SpriteBatch batch) {
         if (timerFont != null) {
+            timerFont.getData().setScale(1.5f); // Reset scale
             timerFont.draw(batch, timerTextLevel, 10, screenHeight - 10);
             timerFont.draw(batch, timerTextTotal, 10, screenHeight - 35);
         }
@@ -561,7 +601,6 @@ public class PlayingState implements GameState, LevelListener, TimerObserver {
 
     @Override
     public void onTick(long levelTime, long totalTime) {
-        // Called by GameTimer
         timerTextLevel = "Level: " + formatTime(levelTime);
         timerTextTotal = "Total: " + formatTime(totalTime);
     }

@@ -37,9 +37,7 @@ public class Bullet {
     public void render(ShapeRenderer shapeRenderer) {
         if (!active)
             return;
-        shapeRenderer.setColor(Color.RED); // Different color for Turret bullets? or Cyan?
-        // User requested "Bullet aset". If texture is needed I can add later. For now
-        // Shape.
+        shapeRenderer.setColor(Color.RED);
         shapeRenderer.rect(position.x, position.y, width, height);
     }
 

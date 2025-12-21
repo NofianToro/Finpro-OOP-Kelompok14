@@ -51,9 +51,7 @@ public class GameManager {
         this.gameActive = false;
     }
 
-    // ===
     // Backend Service
-    // ===
     public void registerPlayer(String username) {
         backendService.createPlayer(username, new BackendService.RequestCallback() {
             @Override

@@ -32,12 +32,13 @@ public class EndCreditsState implements GameState {
         this.font = new BitmapFont();
         this.font.setColor(Color.WHITE);
         this.font.getData().setScale(1.5f);
-        this.scrollY = -300; // Start below screen
+        this.scrollY = -300;
     }
 
     @Override
     public void update(float delta) {
-        scrollY += 100 * delta; // Scroll speed
+        // Scroll Speed
+        scrollY += 100 * delta;
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || scrollY > Gdx.graphics.getHeight() + 400) {
             gsm.set(new MenuState(gsm));
@@ -48,13 +49,13 @@ public class EndCreditsState implements GameState {
     public void render(SpriteBatch batch) {
         ScreenUtils.clear(Color.BLACK);
         batch.begin();
-        
+
         float startY = scrollY;
         for (String line : credits) {
             font.draw(batch, line, 100, startY);
             startY -= 40; // Line spacing
         }
-        
+
         batch.end();
     }
 
